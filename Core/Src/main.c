@@ -42,6 +42,7 @@
 CAN_HandleTypeDef hcan1;
 
 SPI_HandleTypeDef hspi2;
+DMA_HandleTypeDef hdma_spi2_tx;
 
 TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
@@ -58,6 +59,7 @@ static void MX_CAN1_Init(void);
 static void MX_SPI2_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_TIM4_Init(void);
+static void MX_DMA_Init(void);
 static void MX_TIM5_Init(void);
 /* USER CODE BEGIN PFP */
 
@@ -100,6 +102,7 @@ int main(void)
   MX_SPI2_Init();
   MX_TIM3_Init();
   MX_TIM4_Init();
+  MX_DMA_Init();
   MX_TIM5_Init();
   /* USER CODE BEGIN 2 */
 
@@ -216,8 +219,8 @@ static void MX_SPI2_Init(void)
   hspi2.Init.Mode = SPI_MODE_MASTER;
   hspi2.Init.Direction = SPI_DIRECTION_2LINES;
   hspi2.Init.DataSize = SPI_DATASIZE_8BIT;
-  hspi2.Init.CLKPolarity = SPI_POLARITY_LOW;
-  hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi2.Init.CLKPolarity = SPI_POLARITY_HIGH;
+  hspi2.Init.CLKPhase = SPI_PHASE_2EDGE;
   hspi2.Init.NSS = SPI_NSS_HARD_OUTPUT;
   hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
   hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
@@ -436,6 +439,22 @@ static void MX_TIM5_Init(void)
 
   /* USER CODE END TIM5_Init 2 */
   HAL_TIM_MspPostInit(&htim5);
+
+}
+
+/**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Channel5_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel5_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel5_IRQn);
 
 }
 
