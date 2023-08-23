@@ -61,6 +61,7 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define ADC_NRDY_Pin GPIO_PIN_0
 #define ADC_NRDY_GPIO_Port GPIOC
+#define ADC_NRDY_EXTI_IRQn EXTI0_IRQn
 #define PWM_SW_1_Pin GPIO_PIN_0
 #define PWM_SW_1_GPIO_Port GPIOA
 #define PWM_SW_2_Pin GPIO_PIN_1
