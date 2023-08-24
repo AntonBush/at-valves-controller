@@ -21,6 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "user_buffer.h"
 
 /* USER CODE END Includes */
 
@@ -49,6 +50,9 @@ TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
 TIM_HandleTypeDef htim5;
 TIM_HandleTypeDef htim6;
+DMA_HandleTypeDef hdma_tim3_ch4_up;
+DMA_HandleTypeDef hdma_tim4_up;
+DMA_HandleTypeDef hdma_tim5_ch3_up;
 
 /* USER CODE BEGIN PV */
 
@@ -115,6 +119,21 @@ int main(void)
   MX_NVIC_Init();
   /* USER CODE BEGIN 2 */
   __enable_irq();
+
+  HAL_TIM_PWM_Start_DMA(&htim3, TIM_CHANNEL_1, (uint32_t *)(User_T3PwmBuffer + 0), 1);
+  HAL_TIM_PWM_Start_DMA(&htim3, TIM_CHANNEL_2, (uint32_t *)(User_T3PwmBuffer + 1), 1);
+
+  HAL_TIM_PWM_Start_DMA(&htim4, TIM_CHANNEL_1, (uint32_t *)(User_T4PwmBuffer + 0), 1);
+  HAL_TIM_PWM_Start_DMA(&htim4, TIM_CHANNEL_2, (uint32_t *)(User_T4PwmBuffer + 1), 1);
+  HAL_TIM_PWM_Start_DMA(&htim4, TIM_CHANNEL_3, (uint32_t *)(User_T4PwmBuffer + 2), 1);
+  HAL_TIM_PWM_Start_DMA(&htim4, TIM_CHANNEL_4, (uint32_t *)(User_T4PwmBuffer + 3), 1);
+
+  HAL_TIM_PWM_Start_DMA(&htim5, TIM_CHANNEL_1, (uint32_t *)(User_T5PwmBuffer + 0), 1);
+  HAL_TIM_PWM_Start_DMA(&htim5, TIM_CHANNEL_2, (uint32_t *)(User_T5PwmBuffer + 1), 1);
+  HAL_TIM_PWM_Start_DMA(&htim5, TIM_CHANNEL_3, (uint32_t *)(User_T5PwmBuffer + 2), 1);
+  HAL_TIM_PWM_Start_DMA(&htim5, TIM_CHANNEL_4, (uint32_t *)(User_T5PwmBuffer + 3), 1);
+
+  HAL_TIM_Base_Start_IT(&htim6);
 
   /* USER CODE END 2 */
 
@@ -518,6 +537,7 @@ static void MX_DMA_Init(void)
 
   /* DMA controller clock enable */
   __HAL_RCC_DMA1_CLK_ENABLE();
+  __HAL_RCC_DMA2_CLK_ENABLE();
 
 }
 
