@@ -11,6 +11,8 @@
 #include "stm32f1xx_hal_tim.h"
 #include "stm32f1xx_hal_spi.h"
 
+extern CAN_HandleTypeDef hcan1;
+
 extern SPI_HandleTypeDef hspi2;
 extern DMA_HandleTypeDef hdma_spi2_tx;
 extern DMA_HandleTypeDef hdma_spi2_rx;
@@ -30,18 +32,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   ++User_AdcPollCommandIndex;
 }
 
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-{
-  if (htim != &htim6) return;
-
-  // Begin transfer to CAN
-  ; // @todo
-
-  // Begin transfer to SPI
-  HAL_SPI_Transmit_DMA(&hspi2, User_AdcPollCommands + User_AdcPollCommandIndex, 1);
-  ++User_AdcPollCommandIndex;
-}
-
 void HAL_SPI_TxRxCpltCallback (SPI_HandleTypeDef * hspi)
 {
   if (hspi != &hspi2) return;
@@ -52,4 +42,27 @@ void HAL_SPI_TxRxCpltCallback (SPI_HandleTypeDef * hspi)
   ; // @todo
 
   User_AdcPollCommandIndex = 0;
+}
+
+void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
+{
+  if (hcan != &hcan1) return;
+/*
+  if(HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &RxHeader, RxData) == HAL_OK)
+  {
+    //HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+  }
+*/
+}
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  if (htim != &htim6) return;
+
+  // Begin transfer to CAN
+  ; // @todo
+
+  // Begin transfer to SPI
+  HAL_SPI_Transmit_DMA(&hspi2, User_AdcPollCommands + User_AdcPollCommandIndex, 1);
+  ++User_AdcPollCommandIndex;
 }
