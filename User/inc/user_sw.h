@@ -10,11 +10,16 @@
 
 #include "stdint.h"
 
-#define USER__SW_COUNT 10
+#define USER__SW_COUNT 10U
 
-#define USER__T3_PWM_BUFFER_SIZE 2
-#define USER__T4_PWM_BUFFER_SIZE 4
-#define USER__T5_PWM_BUFFER_SIZE 4
+#define USER__T3_PWM_BUFFER_SIZE 2U
+#define USER__T4_PWM_BUFFER_SIZE 4U
+#define USER__T5_PWM_BUFFER_SIZE 4U
+
+#define USER__PWM_MAX_VALUE 0xFFFFU
+
+#define USER__PWM_VALUE_FROM_PERCENTAGES(percentages) \
+((percentages) * USER__PWM_MAX_VALUE / 100)
 
 extern uint16_t User_T3PwmBuffer[USER__T3_PWM_BUFFER_SIZE];
 extern uint16_t User_T4PwmBuffer[USER__T4_PWM_BUFFER_SIZE];

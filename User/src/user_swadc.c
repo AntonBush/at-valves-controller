@@ -36,6 +36,7 @@ void User_StartPollingAdc(SPI_HandleTypeDef *hspi)
 User_AdcPollingStatus_t User_ContinuePollingAdc(SPI_HandleTypeDef *hspi)
 {
   // @todo
+  return USER__ADC_POLLING_IS_NOT_PERFORMED;
 }
 
 /*
