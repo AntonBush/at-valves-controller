@@ -5,7 +5,9 @@
  *      Author: bushev
  */
 
-#include "user_buffer.h"
+#include "user_swcurrent.h"
+#include "user_swadc.h"
+#include "user_can.h"
 
 #include "main.h"
 #include "stm32f1xx_hal_tim.h"
@@ -23,46 +25,37 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
   if (GPIO_Pin != ADC_NRDY_Pin) return;
 
-  HAL_SPI_TransmitReceive_DMA(
-      &hspi2
-      , User_AdcPollData + User_AdcPollCommandIndex - 1
-      , User_AdcPollCommands + User_AdcPollCommandIndex
-      , 1
-  );
-  ++User_AdcPollCommandIndex;
+  User_ReadAdcChannel(&hspi2);
 }
 
-void HAL_SPI_TxRxCpltCallback (SPI_HandleTypeDef * hspi)
+void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
 {
   if (hspi != &hspi2) return;
 
-  if (User_AdcPollCommandIndex != USER__ADC_POLL_COMMAND_COUNT) return;
+  if (User_ContinuePollingAdc(hspi) != USER__ADC_POLLING_IS_NOT_PERFORMED) return;
 
   // Calculate currents and send to User_CurrentBuffer
   ; // @todo
-
-  User_AdcPollCommandIndex = 0;
+  for (
+    int i = 0
+    ; i < USER__ADC_POLL_DATA_COUNT
+    ; i += USER__ADC_POLL_DATA_LENGTH
+  )
+  {
+    //uint32_t ;
+  }
 }
 
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 {
   if (hcan != &hcan1) return;
-/*
-  if(HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &RxHeader, RxData) == HAL_OK)
-  {
-    //HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
-  }
-*/
+  User_ReceiveCanMessage(hcan);
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   if (htim != &htim6) return;
 
-  // Begin transfer to CAN
-  ; // @todo
-
-  // Begin transfer to SPI
-  HAL_SPI_Transmit_DMA(&hspi2, User_AdcPollCommands + User_AdcPollCommandIndex, 1);
-  ++User_AdcPollCommandIndex;
+  User_TransmitCanMessage(&hcan1);
+  User_StartPollingAdc(&hspi2);
 }

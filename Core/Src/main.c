@@ -21,7 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "user_buffer.h"
+#include "user_sw.h"
 
 /* USER CODE END Includes */
 
@@ -70,7 +70,7 @@ static void MX_TIM5_Init(void);
 static void MX_TIM6_Init(void);
 static void MX_NVIC_Init(void);
 /* USER CODE BEGIN PFP */
-
+static void Start(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -85,7 +85,7 @@ static void MX_NVIC_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+  __disable_irq();
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -101,7 +101,6 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-  __disable_irq();
 
   /* USER CODE END SysInit */
 
@@ -118,27 +117,8 @@ int main(void)
   /* Initialize interrupts */
   MX_NVIC_Init();
   /* USER CODE BEGIN 2 */
+  Start();
   __enable_irq();
-
-  // @todo can filter configuration
-  HAL_CAN_ActivateNotification(&hcan1, CAN_IT_RX_FIFO0_MSG_PENDING);
-  HAL_CAN_Start(&hcan1);
-
-  HAL_TIM_PWM_Start_DMA(&htim3, TIM_CHANNEL_1, (uint32_t *)(User_T3PwmBuffer + 0), 1);
-  HAL_TIM_PWM_Start_DMA(&htim3, TIM_CHANNEL_2, (uint32_t *)(User_T3PwmBuffer + 1), 1);
-
-  HAL_TIM_PWM_Start_DMA(&htim4, TIM_CHANNEL_1, (uint32_t *)(User_T4PwmBuffer + 0), 1);
-  HAL_TIM_PWM_Start_DMA(&htim4, TIM_CHANNEL_2, (uint32_t *)(User_T4PwmBuffer + 1), 1);
-  HAL_TIM_PWM_Start_DMA(&htim4, TIM_CHANNEL_3, (uint32_t *)(User_T4PwmBuffer + 2), 1);
-  HAL_TIM_PWM_Start_DMA(&htim4, TIM_CHANNEL_4, (uint32_t *)(User_T4PwmBuffer + 3), 1);
-
-  HAL_TIM_PWM_Start_DMA(&htim5, TIM_CHANNEL_1, (uint32_t *)(User_T5PwmBuffer + 0), 1);
-  HAL_TIM_PWM_Start_DMA(&htim5, TIM_CHANNEL_2, (uint32_t *)(User_T5PwmBuffer + 1), 1);
-  HAL_TIM_PWM_Start_DMA(&htim5, TIM_CHANNEL_3, (uint32_t *)(User_T5PwmBuffer + 2), 1);
-  HAL_TIM_PWM_Start_DMA(&htim5, TIM_CHANNEL_4, (uint32_t *)(User_T5PwmBuffer + 3), 1);
-
-  HAL_TIM_Base_Start_IT(&htim6);
-
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -250,7 +230,25 @@ static void MX_CAN1_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN CAN1_Init 2 */
-
+  CAN_FilterTypeDef  filter_config;
+  filter_config.FilterBank = 0;
+  filter_config.FilterMode = CAN_FILTERMODE_IDMASK;
+  filter_config.FilterScale = CAN_FILTERSCALE_32BIT;
+  filter_config.FilterIdHigh = 0x0000;
+  filter_config.FilterIdLow = 0x0000;
+  filter_config.FilterMaskIdHigh = 0x0000;
+  filter_config.FilterMaskIdLow = 0x0000;
+  filter_config.FilterFIFOAssignment = CAN_RX_FIFO0;
+  filter_config.FilterActivation = ENABLE;
+  //sFilterConfig.SlaveStartFilterBank = 14;
+  if(HAL_CAN_ConfigFilter(&hcan1, &filter_config) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_CAN_ActivateNotification(&hcan1, CAN_IT_RX_FIFO0_MSG_PENDING) != HAL_OK)
+  {
+    Error_Handler();
+  }
   /* USER CODE END CAN1_Init 2 */
 
 }
@@ -572,7 +570,25 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+static void Start(void)
+{
+  HAL_CAN_Start(&hcan1);
 
+  HAL_TIM_PWM_Start_DMA(&htim3, TIM_CHANNEL_1, (uint32_t *)(User_T3PwmBuffer + 0), 1);
+  HAL_TIM_PWM_Start_DMA(&htim3, TIM_CHANNEL_2, (uint32_t *)(User_T3PwmBuffer + 1), 1);
+
+  HAL_TIM_PWM_Start_DMA(&htim4, TIM_CHANNEL_1, (uint32_t *)(User_T4PwmBuffer + 0), 1);
+  HAL_TIM_PWM_Start_DMA(&htim4, TIM_CHANNEL_2, (uint32_t *)(User_T4PwmBuffer + 1), 1);
+  HAL_TIM_PWM_Start_DMA(&htim4, TIM_CHANNEL_3, (uint32_t *)(User_T4PwmBuffer + 2), 1);
+  HAL_TIM_PWM_Start_DMA(&htim4, TIM_CHANNEL_4, (uint32_t *)(User_T4PwmBuffer + 3), 1);
+
+  HAL_TIM_PWM_Start_DMA(&htim5, TIM_CHANNEL_1, (uint32_t *)(User_T5PwmBuffer + 0), 1);
+  HAL_TIM_PWM_Start_DMA(&htim5, TIM_CHANNEL_2, (uint32_t *)(User_T5PwmBuffer + 1), 1);
+  HAL_TIM_PWM_Start_DMA(&htim5, TIM_CHANNEL_3, (uint32_t *)(User_T5PwmBuffer + 2), 1);
+  HAL_TIM_PWM_Start_DMA(&htim5, TIM_CHANNEL_4, (uint32_t *)(User_T5PwmBuffer + 3), 1);
+
+  HAL_TIM_Base_Start_IT(&htim6);
+}
 /* USER CODE END 4 */
 
 /**
