@@ -11,11 +11,21 @@
 #include "stm32f1xx_hal.h"
 #include "stm32f1xx_hal_can.h"
 
-extern CAN_TxHeaderTypeDef User_CanTxHeader;
-extern CAN_RxHeaderTypeDef User_CanRxHeader;
-extern uint8_t User_CanTxData[8];
-extern uint8_t User_CanRxData[8];
-extern uint32_t User_TxMailbox;
+#define USER__CAN_BUFFER_SIZE 256
+
+typedef uint8_t User_CanIndex_t;
+
+typedef struct User_CanRxMessage
+{
+  CAN_RxHeaderTypeDef header;
+  uint8_t content[8];
+} User_CanRxMessage_t;
+
+typedef struct User_CanTxMessage
+{
+  CAN_TxHeaderTypeDef header;
+  uint8_t content[8];
+} User_CanTxMessage_t;
 
 void User_ReceiveCanMessage(CAN_HandleTypeDef *hcan);
 void User_TransmitCanMessage(CAN_HandleTypeDef *hcan);

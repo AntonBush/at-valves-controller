@@ -9,8 +9,7 @@
 #define INC_USER_SWCURRENT_H_
 
 #include "user_sw.h"
-
-typedef uint32_t uint24_t;
+#include "user_int.h"
 
 extern uint16_t User_SwCurrentBuffer[USER__SW_COUNT];
 

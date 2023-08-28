@@ -19,7 +19,7 @@
 #define USER__PWM_MAX_VALUE 0xFFFFU
 
 #define USER__PWM_VALUE_FROM_PERCENTAGES(percentages) \
-((percentages) * USER__PWM_MAX_VALUE / 100)
+((percentages) * USER__PWM_MAX_VALUE / 100U)
 
 extern uint16_t User_T3PwmBuffer[USER__T3_PWM_BUFFER_SIZE];
 extern uint16_t User_T4PwmBuffer[USER__T4_PWM_BUFFER_SIZE];

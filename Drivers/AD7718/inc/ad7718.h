@@ -12,8 +12,8 @@
 
 typedef enum Ad7718_CommunicationControl
 {
-  AD7718__CR__NOT_WRITE_ENABLE = USER__BIT8__7
-, AD7718__CR__READ_NOT_WRITE   = USER__BIT8__6
+  AD7718__CR__IGNORE_WRITE = USER__BIT8__7
+, AD7718__CR__READ         = USER__BIT8__6
 } Ad7718_CommunicationControl_t;
 
 typedef enum Ad7718_CommunicationAddress
@@ -45,12 +45,12 @@ typedef enum Ad7718_Status
 
 typedef enum Ad7718_ModeControl
 {
-  AD7718__MR__NOT_CHOPPING_ENABLE     = USER__BIT8__7
+  AD7718__MR__DISABLE_CHOPPING        = USER__BIT8__7
 , AD7718__MR__NEGATIVE_INPUT_BUFFERED = USER__BIT8__6
-, AD7718__MR__NOT_REFIN1_OR_REFIN2    = USER__BIT8__5
-, AD7718__MR__NOT_8_OR_10_CHANNELS    = USER__BIT8__4
+, AD7718__MR__REFIN2                  = USER__BIT8__5
+, AD7718__MR__10_CHANNELS             = USER__BIT8__4
 
-, AD7718__MR__NOT_8_OR_10_CHANNELS    = USER__BIT8__3
+, AD7718__MR__STOP_OSCILLATOR         = USER__BIT8__3
 } Ad7718_ModeControl_t;
 
 typedef enum Ad7718_Mode
@@ -117,7 +117,7 @@ typedef enum Ad7718_AdcControlChannel10
 
 , AD7718__CH10__PSEUDO_DIFFERENTIAL_8 = (14 << 4)
 , AD7718__CH10__PSEUDO_DIFFERENTIAL_9 = (15 << 4)
-} Ad7718_Ad7718_AdcControlChannel8_t;
+} Ad7718_Ad7718_AdcControlChannel10_t;
 
 typedef enum Ad7718_AdcControlRange
 {
@@ -130,7 +130,7 @@ typedef enum Ad7718_AdcControlRange
 , AD7718__RN__0_640_V = 5
 , AD7718__RN__1_280_V = 6
 , AD7718__RN__2_560_V = 7
-} Ad7718_Ad7718_AdcControlChannel8_t;
+} Ad7718_AdcControlRange_t;
 
 /*
  *
