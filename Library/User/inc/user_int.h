@@ -10,6 +10,9 @@
 
 #include "stdint.h"
 
-typedef uint32_t uint24_t;
+typedef struct User_UInt24
+{
+  uint32_t value : 24;
+} User_UInt24_t;
 
 #endif /* USER_INC_USER_INT_H_ */

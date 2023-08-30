@@ -13,6 +13,6 @@
 
 extern uint16_t User_SwCurrentBuffer[USER__SW_COUNT];
 
-uint16_t User_CalculateSwCurrentFactor125EMin5(uint24_t adc_data);
+uint16_t User_CalculateSwCurrentFactor125EMin5(User_UInt24_t adc_data);
 
 #endif /* INC_USER_SWCURRENT_H_ */
