@@ -31,6 +31,8 @@ static User_CanTxMessage_t User_CanTxMessage = {
 , .content = {0}
 };
 
+static uint32_t User_CanLifeCounter = 0;
+
 void User_CanTx(void)
 {
   User_SwCurrentData_t sw_current_data;
@@ -39,6 +41,7 @@ void User_CanTx(void)
   User_CanTxMessage.header.ExtId = USER__CURRENT_CAN_ID__T3;
   User_SetRegularParam(User_CanTxMessage.content, 16, 0, sw_current_data.values[0]);
   User_SetRegularParam(User_CanTxMessage.content, 16, 1, sw_current_data.values[1]);
+  User_SetRegularParam(User_CanTxMessage.content, 32, 1, User_CanLifeCounter++ % 12);
   User_AddCanMessage(&User_CanTxMessage);
 
   User_CanTxMessage.header.ExtId = USER__CURRENT_CAN_ID__T4;

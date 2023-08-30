@@ -194,6 +194,9 @@ static void MX_NVIC_Init(void)
   /* CAN1_RX0_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(CAN1_RX0_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(CAN1_RX0_IRQn);
+  /* CAN1_TX_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(CAN1_TX_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(CAN1_TX_IRQn);
   /* TIM6_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(TIM6_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(TIM6_IRQn);
@@ -246,7 +249,7 @@ static void MX_CAN1_Init(void)
   {
     Error_Handler();
   }
-  if (HAL_CAN_ActivateNotification(&hcan1, CAN_IT_RX_FIFO0_MSG_PENDING) != HAL_OK)
+  if (HAL_CAN_ActivateNotification(&hcan1, CAN_IT_RX_FIFO0_MSG_PENDING | CAN_IT_TX_MAILBOX_EMPTY) != HAL_OK)
   {
     Error_Handler();
   }

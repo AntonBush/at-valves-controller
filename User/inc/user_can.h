@@ -11,9 +11,7 @@
 #include "stm32f1xx_hal.h"
 #include "stm32f1xx_hal_can.h"
 
-#define USER__CAN_BUFFER_SIZE 256
-
-typedef uint8_t User_CanIndex_t;
+#include "stdbool.h"
 
 typedef struct User_CanRxMessage
 {
@@ -27,7 +25,7 @@ typedef struct User_CanTxMessage
   uint8_t content[8];
 } User_CanTxMessage_t;
 
-void User_ReceiveCanMessage(CAN_HandleTypeDef *hcan);
-void User_TransmitCanMessage(CAN_HandleTypeDef *hcan);
+void User_AddCanMessage(User_CanTxMessage_t *message);
+bool User_TakeCanMessage(User_CanRxMessage_t *message);
 
 #endif /* INC_USER_CAN_H_ */

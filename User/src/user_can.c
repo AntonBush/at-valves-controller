@@ -11,24 +11,41 @@
 #include "user_swcurrent.h"
 #include "user_bytevec.h"
 
+// private defines
+
+#define USER__CAN_BUFFER_SIZE_EXPONENT 6
+#define USER__CAN_BUFFER_SIZE (1 << 6)
+
 // private typedefs
 
-typedef enum User_PwmCanId
+typedef struct User_CanRxBuffer
 {
-  USER__PWM_CAN_ID__T3 = 0x113FFFFF
-, USER__PWM_CAN_ID__T4 = 0x114FFFFF
-, USER__PWM_CAN_ID__T5 = 0x115FFFFF
-} User_PwmCanId_t;
+  User_CanRxMessage_t messages[USER__CAN_BUFFER_SIZE];
+  uint8_t read_index  : USER__CAN_BUFFER_SIZE_EXPONENT;
+  uint8_t write_index : USER__CAN_BUFFER_SIZE_EXPONENT;
+} User_CanRxBuffer_t;
 
-typedef enum User_CurrentCanId
+typedef struct User_CanTxBuffer
 {
-  USER__CURRENT_CAN_ID__T3 = 0x123FFFFF
-, USER__CURRENT_CAN_ID__T4_T5 = 0x124FFFFF
-} User_CurrentCanId_t;
+  User_CanTxMessage_t messages[USER__CAN_BUFFER_SIZE];
+  uint8_t read_index  : USER__CAN_BUFFER_SIZE_EXPONENT;
+  uint8_t write_index : USER__CAN_BUFFER_SIZE_EXPONENT;
+} User_CanTxBuffer_t;
+
+// extern variables
+
+extern CAN_HandleTypeDef hcan1;
 
 // private variables
 
-extern CAN_HandleTypeDef hcan1;
+static User_CanRxBuffer_t User_CanRxBuffer = {
+  .read_index  = 0
+, .write_index = 0
+};
+static User_CanTxBuffer_t User_CanTxBuffer = {
+  .read_index  = 0
+, .write_index = 0
+};
 
 /*
 CAN_TxHeaderTypeDef User_CanTxHeader = {
@@ -42,97 +59,97 @@ CAN_TxHeaderTypeDef User_CanTxHeader = {
 CAN_RxHeaderTypeDef User_CanRxHeader;
 uint8_t User_CanTxData[8] = {0,};
 uint8_t User_CanRxData[8] = {0,};
-uint32_t User_TxMailbox = 0;
 */
+static uint32_t User_TxMailbox = 0;
 
 // private function prototypes
 
-//static void rx(void);
+static void User_ReceiveCanMessage(void);
+static void User_TransmitCanMessage(void);
 
 // extern functions
 
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 {
   if (hcan != &hcan1) return;
-  User_ReceiveCanMessage(hcan);
+  User_ReceiveCanMessage();
+}
+
+void HAL_CAN_TxMailbox0CompleteCallback (CAN_HandleTypeDef * hcan)
+{
+  if (hcan != &hcan1) return;
+  User_TransmitCanMessage();
+}
+
+void HAL_CAN_TxMailbox1CompleteCallback (CAN_HandleTypeDef * hcan)
+{
+  if (hcan != &hcan1) return;
+  User_TransmitCanMessage();
+}
+
+void HAL_CAN_TxMailbox2CompleteCallback (CAN_HandleTypeDef * hcan)
+{
+  if (hcan != &hcan1) return;
+  User_TransmitCanMessage();
 }
 
 // public functions
 
-void User_ReceiveCanMessage(CAN_HandleTypeDef *hcan)
+void User_AddCanMessage(User_CanTxMessage_t *message)
 {
-/*
-  {
-    HAL_StatusTypeDef status = HAL_CAN_GetRxMessage(
-      hcan
-    , CAN_RX_FIFO0
-    , &User_CanRxHeader
-    , User_CanRxData
-    );
-    if (status != HAL_OK) return;
-  }
-  if (User_CanRxHeader.IDE != CAN_ID_EXT) return;
+  User_CanTxBuffer.messages[User_CanTxBuffer.write_index] = *message;
+  User_CanTxBuffer.write_index += 1;
 
-  switch (User_CanRxHeader.ExtId)
-  {
-  case USER__CURRENT_CAN_ID__T3:
-    User_T3PwmBuffer[0] = USER__PWM_VALUE_FROM_PERCENTAGES(
-        User_GetRegularParam(User_CanRxData, 8, 0)
-    );
-    User_T3PwmBuffer[1] = USER__PWM_VALUE_FROM_PERCENTAGES(
-        User_GetRegularParam(User_CanRxData, 8, 1)
-    );
-    break;
-  case USER__CURRENT_CAN_ID__T4_T5:
-    User_T4PwmBuffer[0] = USER__PWM_VALUE_FROM_PERCENTAGES(
-        User_GetRegularParam(User_CanRxData, 8, 0)
-    );
-    User_T4PwmBuffer[1] = USER__PWM_VALUE_FROM_PERCENTAGES(
-        User_GetRegularParam(User_CanRxData, 8, 1)
-    );
-    User_T4PwmBuffer[2] = USER__PWM_VALUE_FROM_PERCENTAGES(
-        User_GetRegularParam(User_CanRxData, 8, 2)
-    );
-    User_T4PwmBuffer[3] = USER__PWM_VALUE_FROM_PERCENTAGES(
-        User_GetRegularParam(User_CanRxData, 8, 3)
-    );
-    User_T5PwmBuffer[0] = USER__PWM_VALUE_FROM_PERCENTAGES(
-        User_GetRegularParam(User_CanRxData, 8, 4)
-    );
-    User_T5PwmBuffer[1] = USER__PWM_VALUE_FROM_PERCENTAGES(
-        User_GetRegularParam(User_CanRxData, 8, 5)
-    );
-    User_T5PwmBuffer[2] = USER__PWM_VALUE_FROM_PERCENTAGES(
-        User_GetRegularParam(User_CanRxData, 8, 6)
-    );
-    User_T5PwmBuffer[3] = USER__PWM_VALUE_FROM_PERCENTAGES(
-        User_GetRegularParam(User_CanRxData, 8, 7)
-    );
-    break;
-  }
-*/
+  User_TransmitCanMessage();
 }
 
-void User_TransmitCanMessage(CAN_HandleTypeDef *hcan)
+bool User_TakeCanMessage(User_CanRxMessage_t *message)
 {
-/*
-  User_CanTxHeader.ExtId = USER__PWM_CAN_ID__T3;
-  User_SetRegularParam(User_CanRxData, 16, 0, User_SwCurrentBuffer[0]);
-  User_SetRegularParam(User_CanRxData, 16, 1, User_SwCurrentBuffer[1]);
-  HAL_CAN_AddTxMessage(hcan, &User_CanTxHeader, User_CanTxData, &User_TxMailbox);
+  if (User_CanRxBuffer.read_index == User_CanRxBuffer.write_index)
+  {
+    return false;
+  }
 
-  User_CanTxHeader.ExtId = USER__PWM_CAN_ID__T4;
-  User_SetRegularParam(User_CanRxData, 16, 0, User_SwCurrentBuffer[2]);
-  User_SetRegularParam(User_CanRxData, 16, 1, User_SwCurrentBuffer[3]);
-  User_SetRegularParam(User_CanRxData, 16, 2, User_SwCurrentBuffer[4]);
-  User_SetRegularParam(User_CanRxData, 16, 3, User_SwCurrentBuffer[5]);
-  HAL_CAN_AddTxMessage(hcan, &User_CanTxHeader, User_CanTxData, &User_TxMailbox);
+  (*message) = User_CanRxBuffer.messages[User_CanRxBuffer.read_index];
+  User_CanRxBuffer.read_index += 1;
+  return true;
+}
 
-  User_CanTxHeader.ExtId = USER__PWM_CAN_ID__T5;
-  User_SetRegularParam(User_CanRxData, 16, 0, User_SwCurrentBuffer[6]);
-  User_SetRegularParam(User_CanRxData, 16, 1, User_SwCurrentBuffer[7]);
-  User_SetRegularParam(User_CanRxData, 16, 2, User_SwCurrentBuffer[8]);
-  User_SetRegularParam(User_CanRxData, 16, 3, User_SwCurrentBuffer[9]);
-  HAL_CAN_AddTxMessage(hcan, &User_CanTxHeader, User_CanTxData, &User_TxMailbox);
-*/
+// private
+
+static void User_ReceiveCanMessage(void)
+{
+  HAL_StatusTypeDef status = HAL_CAN_GetRxMessage(
+    &hcan1
+  , CAN_RX_FIFO0
+  , &User_CanRxBuffer.messages[User_CanRxBuffer.write_index].header
+  , User_CanRxBuffer.messages[User_CanRxBuffer.write_index].content
+  );
+
+  if (status != HAL_OK) return;
+
+  User_CanRxBuffer.write_index += 1;
+}
+
+static void User_TransmitCanMessage(void)
+{
+  uint32_t free_mailbox_count = HAL_CAN_GetTxMailboxesFreeLevel (&hcan1);
+
+  for (
+    int i = 0
+  ; (
+       i < free_mailbox_count
+    && User_CanTxBuffer.read_index != User_CanTxBuffer.write_index
+    )
+  ; ++i
+  )
+  {
+    HAL_CAN_AddTxMessage(
+      &hcan1
+    , &User_CanTxBuffer.messages[User_CanTxBuffer.read_index].header
+    , User_CanTxBuffer.messages[User_CanTxBuffer.read_index].content
+    , &User_TxMailbox
+    );
+    User_CanTxBuffer.read_index += 1;
+  }
 }
