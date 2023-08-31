@@ -132,10 +132,4 @@ typedef enum Ad7718_AdcControlRange
 , AD7718__RN__2_560_V = 7
 } Ad7718_AdcControlRange_t;
 
-/*
- *
- * @todo
- *
- */
-
 #endif /* AD7718_INC_AD7718_DEF_H_ */

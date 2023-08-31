@@ -21,7 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "user_sw.h"
+#include "user_swadc.h"
 #include "user_logic.h"
 /* USER CODE END Includes */
 
@@ -588,6 +588,11 @@ static void Start(void)
   HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_4);
 
   HAL_TIM_Base_Start_IT(&htim6);
+
+  if (User_InitAdc() != HAL_OK)
+  {
+    Error_Handler();
+  }
 }
 /* USER CODE END 4 */
 
