@@ -11,8 +11,20 @@
 #include "user_swadc.h"
 #include "user_swcurrent.h"
 #include "user_canrx.h"
+#include "user_cantx.h"
+
+static bool User_InterruptUpdateFlag = false;
+static bool User_LoopUpdateFlag = false;
 
 static void User_updateSwCurrent(void);
+
+void User_updateData(void)
+{
+  if (User_InterruptUpdateFlag == User_LoopUpdateFlag)
+  {
+    User_InterruptUpdateFlag = !User_InterruptUpdateFlag;
+  }
+}
 
 void User_update(void)
 {
@@ -22,9 +34,17 @@ void User_update(void)
   }
 
   User_CanRxMessage_t message;
-  if (User_TakeCanMessage(&message))
+  while (User_TakeCanMessage(&message))
   {
     User_CanRx(&message);
+  }
+
+  if (User_LoopUpdateFlag != User_InterruptUpdateFlag)
+  {
+    User_LoopUpdateFlag = User_InterruptUpdateFlag;
+    // @todo make init before uncomment
+    //User_StartPollingAdc();
+    User_CanTx();
   }
 }
 

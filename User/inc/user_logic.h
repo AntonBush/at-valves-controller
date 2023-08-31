@@ -8,6 +8,7 @@
 #ifndef INC_USER_LOGIC_H_
 #define INC_USER_LOGIC_H_
 
+void User_updateData(void);
 void User_update(void);
 
 #endif /* INC_USER_LOGIC_H_ */

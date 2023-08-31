@@ -5,9 +5,10 @@
  *      Author: bushev
  */
 
-#include "user_swcurrent.h"
-#include "user_swadc.h"
-#include "user_cantx.h"
+#include "user_logic.h"
+
+#include "stm32f1xx_hal.h"
+#include "stm32f1xx_hal_tim.h"
 
 extern TIM_HandleTypeDef htim6;
 
@@ -15,8 +16,5 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   if (htim != &htim6) return;
 
-  // @todo make init before uncomment
-  //User_StartPollingAdc();
-
-  User_CanTx();
+  User_updateData();
 }
