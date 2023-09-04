@@ -16,7 +16,7 @@
 #define USER__T4_PWM_BUFFER_SIZE 4U
 #define USER__T5_PWM_BUFFER_SIZE 4U
 
-#define USER__PWM_MAX_VALUE 0xFFFFU
+#define USER__PWM_MAX_VALUE 20000U
 
 #define USER__PWM_VALUE_FROM_PERCENTAGES(percentages) \
 ((percentages) * USER__PWM_MAX_VALUE / 100U)

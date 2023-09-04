@@ -19,6 +19,7 @@
 #define USER__SW_FEEDBACK_CURRENT_MODIFIER (10 * 1000)
 #define USER__SW_CURRENT_FACTOR_MODIFIER (100 * 8)
 
+/* @unused_reentrance
 // private typedefs
 
 typedef enum User_SwCurrentBufferIndex
@@ -28,11 +29,15 @@ typedef enum User_SwCurrentBufferIndex
 , USER__SW_CURRENT_BUFFER__COUNT
 , USER__SW_CURRENT_NO_BUFFER
 } User_SwCurrentBufferIndex_t;
+*/
 
 // private variables
 
+/* @unused_reentrance
 static User_SwCurrentData_t User_SwCurrentBuffers[USER__SW_CURRENT_BUFFER__COUNT];
 static User_SwCurrentBufferIndex_t User_ActiveSwCurrentBuffer = USER__SW_CURRENT_BUFFER__A;
+*/
+static User_SwCurrentData_t User_SwCurrentBuffer;
 
 // public functions
 
@@ -53,15 +58,21 @@ uint16_t User_CalculateSwCurrentFactor125EMin5(User_UInt24_t adc_data)
 
 void User_ReadSwCurrentData(User_SwCurrentData_t *data)
 {
+/* @unused_reentrance
   (*data) = User_SwCurrentBuffers[User_ActiveSwCurrentBuffer];
+*/
+  (*data) = User_SwCurrentBuffer;
 }
 
 void User_WriteSwCurrentData(User_SwCurrentData_t *data)
 {
+/* @unused_reentrance
   User_SwCurrentBufferIndex_t new_buffer
     = User_ActiveSwCurrentBuffer == USER__SW_CURRENT_BUFFER__A
     ? USER__SW_CURRENT_BUFFER__B
     : USER__SW_CURRENT_BUFFER__A;
   User_SwCurrentBuffers[new_buffer] = (*data);
   User_ActiveSwCurrentBuffer = new_buffer;
+*/
+  User_SwCurrentBuffer = (*data);
 }
