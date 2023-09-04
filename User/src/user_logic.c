@@ -42,9 +42,9 @@ void User_update(void)
   if (User_LoopUpdateFlag != User_InterruptUpdateFlag)
   {
     User_LoopUpdateFlag = User_InterruptUpdateFlag;
-    __disable_irq();
+    //__disable_irq();
     User_StartPollingAdc();
-    __enable_irq();
+    //__enable_irq();
     User_CanTx();
   }
 }
