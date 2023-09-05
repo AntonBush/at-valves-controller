@@ -49,7 +49,7 @@ uint16_t User_CalculateSwCurrentFactor125EMin5(User_UInt24_t adc_data)
   // shift value to make average error ~ 0
   return (temp + temp % 2) >> 1;
 #else
-  float adc_voltage = USER__CAST_TO_VOLTAGE_MODIFIER * adc_data;
+  float adc_voltage = USER__CAST_TO_VOLTAGE_MODIFIER * adc_data.value;
   float switch_feedback_current = adc_voltage / USER__SW_FEEDBACK_RESISTANCE_OHM;
   float switch_current = USER__SW_FEEDBACK_CURRENT_MODIFIER * switch_feedback_current;
   return USER__SW_CURRENT_FACTOR_MODIFIER * switch_current;
