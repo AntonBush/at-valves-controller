@@ -7,31 +7,13 @@
 
 #include "user_swadc.h"
 
-#include "main.h"
+#include "user_swadc_private.h"
 
-#include "ad7718.h"
-#include "stm32f1xx_hal_gpio.h"
+#include "main.h"
 
 #include "stdbool.h"
 
-// private defines
-
-#define USER__ADC_MODE(mode) \
-( \
-  AD7718__MR__DISABLE_CHOPPING \
-| AD7718__MR__NEGATIVE_INPUT_BUFFERED \
-| AD7718__MR__10_CHANNELS \
-| (mode) \
-)
-#define USER__ADC_INIT_TIMEOUT 5000U
-
 // private typedefs
-
-typedef struct User_AdcChannelCommands
-{
-  const uint8_t choose_adc_channel_command;
-  uint8_t adc_channel;
-} User_AdcChannelCommands_t;
 
 typedef struct User_AdcPullCommand {
   uint8_t read_command;
@@ -70,44 +52,8 @@ extern SPI_HandleTypeDef hspi2;
 
 // private variables
 
-static const Ad7718_Ad7718_AdcControlChannel10_t User_AdcChannelCommands[10] = {
-  AD7718__CH10__PSEUDO_DIFFERENTIAL_0 | AD7718__RN__2_560_V
-, AD7718__CH10__PSEUDO_DIFFERENTIAL_1 | AD7718__RN__2_560_V
-, AD7718__CH10__PSEUDO_DIFFERENTIAL_2 | AD7718__RN__2_560_V
-, AD7718__CH10__PSEUDO_DIFFERENTIAL_3 | AD7718__RN__2_560_V
-, AD7718__CH10__PSEUDO_DIFFERENTIAL_4 | AD7718__RN__2_560_V
-
-, AD7718__CH10__PSEUDO_DIFFERENTIAL_5 | AD7718__RN__2_560_V
-, AD7718__CH10__PSEUDO_DIFFERENTIAL_6 | AD7718__RN__2_560_V
-, AD7718__CH10__PSEUDO_DIFFERENTIAL_7 | AD7718__RN__2_560_V
-, AD7718__CH10__PSEUDO_DIFFERENTIAL_8 | AD7718__RN__2_560_V
-, AD7718__CH10__PSEUDO_DIFFERENTIAL_9 | AD7718__RN__2_560_V
-};
-
-uint8_t User_AdcPreInitCommands[] = {
-  AD7718__CR_ADDR__FILTER
-, 0x03 // 1365.33 Hz
-};
-uint8_t User_AdcPostInitCommands[] = {
-  AD7718__CR_ADDR__MODE
-, USER__ADC_MODE(AD7718__MR_MOD__CONTINUOUS_CONVERSION)
-};
-User_AdcChannelCommands_t User_AdcPreCalibrationCommands = {
-  .choose_adc_channel_command = AD7718__CR_ADDR__ADC_CONTROL
-, .adc_channel = User_AdcChannelCommands[0]
-};
-uint8_t User_AdcZeroScaleCalibrationCommands[] = {
-  AD7718__CR_ADDR__MODE
-, USER__ADC_MODE(AD7718__MR_MOD__INTERNAL_ZERO_SCALE_CALIBRATION)
-};
-uint8_t User_AdcFullScaleCalibrationCommands[] = {
-  AD7718__CR_ADDR__MODE
-, USER__ADC_MODE(AD7718__MR_MOD__INTERNAL_FULL_SCALE_CALIBRATION)
-};
-
 static User_AdcChannelCommands_t User_AdcFetchCommand = {
   .choose_adc_channel_command = AD7718__CR_ADDR__ADC_CONTROL
-, .adc_channel = User_AdcChannelCommands[0]
 };
 static const User_AdcPullCommand_t User_AdcPullCommand = {
   .read_command = AD7718__CR__READ | AD7718__CR_ADDR__ADC_DATA
@@ -115,6 +61,7 @@ static const User_AdcPullCommand_t User_AdcPullCommand = {
 };
 static User_AdcPollValue_t User_AdcPollValues[USER__SW_COUNT];
 static uint8_t User_AdcPollIndex = 0;
+static User_AdcPollStatus_t User_AdcPollStatus = USER__ADC_POLL_FINISHED;
 
 static User_AdcDataBuffer_t User_AdcDataBuffers[USER__ADC_DATA_BUFFER__COUNT] = {
   {
@@ -129,7 +76,6 @@ static User_AdcDataBufferIndex_t User_LockedAdcDataBuffer = USER__ADC_DATA_NO_BU
 
 // private function prototypes
 
-static HAL_StatusTypeDef User_CalibrateAdc(uint8_t *commands, uint16_t command_count);
 static User_AdcPollStatus_t User_ContinuePollAdc(SPI_HandleTypeDef *hspi);
 static void User_FetchAdcChannel(void);
 static void User_ReadAdcChannel(void);
@@ -139,8 +85,115 @@ static void User_ReadAdcChannel(void);
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
   if (GPIO_Pin != ADC_NRDY_Pin) return;
+  HAL_NVIC_DisableIRQ(EXTI0_IRQn);
 
   User_ReadAdcChannel();
+/*
+  typedef struct
+  {
+    uint8_t command;
+    uint8_t dummy;
+  } tx_t;
+
+  typedef struct
+  {
+    uint8_t dummy;
+    uint8_t rx;
+  } rx_t;
+
+  tx_t write_commands[] = {
+    {
+      .command = AD7718__CR__READ | AD7718__CR_ADDR__STATUS_ON_READ
+    , .dummy = 0xFF
+    }
+  , {
+      .command = AD7718__CR__READ | AD7718__CR_ADDR__MODE
+    , .dummy = 0xFE
+    }
+  , {
+      .command = AD7718__CR__READ | AD7718__CR_ADDR__ADC_CONTROL
+    , .dummy = 0xFD
+    }
+  , {
+      .command = AD7718__CR__READ | AD7718__CR_ADDR__FILTER
+    , .dummy = 0xFC
+    }
+  };
+  typedef volatile uint8_t (* volatile u8p)[sizeof(write_commands)];
+  rx_t read_status[sizeof(write_commands) / sizeof(tx_t)];
+  u8p tx = (u8p)(write_commands);
+  u8p rx = (u8p)(read_status);
+
+  for (int i = 0; i < sizeof(write_commands) / sizeof(tx_t); ++i)
+  {
+    read_status[i].dummy = read_status[i].rx = 0;
+  }
+
+
+  SET_BIT(SPI2->CR1, SPI_CR1_SPE);
+
+  SPI2->DR = (*tx)[0];
+  size_t i = 1;
+  for (; i < sizeof(write_commands); ++i)
+  {
+    while (READ_BIT(SPI2->SR, SPI_SR_TXE) == 0)
+    {}
+    SPI2->DR = (*tx)[i];
+    while (READ_BIT(SPI2->SR, SPI_SR_RXNE) == 0)
+    {}
+    (*rx)[i - 1] = SPI2->DR;
+  }
+  while (READ_BIT(SPI2->SR, SPI_SR_RXNE) == 0)
+  {}
+  (*rx)[i - 1] = SPI2->DR;
+
+  while (READ_BIT(SPI2->SR, SPI_SR_TXE) == 0)
+  {}
+  while (READ_BIT(SPI2->SR, SPI_SR_BSY))
+  {}
+  CLEAR_BIT(SPI2->CR1, SPI_CR1_SPE);
+
+  for (int i = 0; i < sizeof(write_commands); ++i)
+  {
+    *((uint8_t *)User_AdcPollValues) = (*rx)[i];
+  }
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+  HAL_StatusTypeDef status = HAL_SPI_TransmitReceive(
+    &hspi2
+  , (uint8_t *)(write_commands)
+  , (uint8_t *)(read_status)
+  , sizeof(write_commands)
+  , 5000
+  );
+  if (status != HAL_OK)
+  {
+    while(1);
+  }
+
+  HAL_SPI_TransmitReceive(
+    &hspi2
+  , (uint8_t *)(&User_AdcPullCommand)
+  , (uint8_t *)(User_AdcPollValues + User_AdcPollIndex)
+  , sizeof(User_AdcPullCommand)
+  , 5000
+  );
+  ++User_AdcPollIndex;
+
+  if (User_AdcPollIndex == USER__SW_COUNT)
+  {
+    User_AdcPollIndex = 0;
+  }
+
+  User_AdcFetchCommand.adc_channel = (
+      User_AdcChannelCommands[User_AdcPollIndex]
+  );
+  HAL_SPI_Transmit(
+    &hspi2
+  , (uint8_t *)(&User_AdcFetchCommand)
+  , sizeof(User_AdcFetchCommand)
+  , 5000
+  );
+*/
 }
 
 void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
@@ -174,73 +227,15 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
   }
 
   User_AdcDataBuffers[User_ActiveAdcDataBuffer].isUpdated = true;
+  User_AdcPollStatus = USER__ADC_POLL_FINISHED;
 }
 
 // public functions
 
-HAL_StatusTypeDef User_InitAdc(void)
-{
-  HAL_NVIC_DisableIRQ(EXTI0_IRQn);
-
-  HAL_StatusTypeDef status = HAL_SPI_Transmit(
-    &hspi2
-  , User_AdcPreInitCommands
-  , sizeof(User_AdcPreInitCommands)
-  , USER__ADC_INIT_TIMEOUT
-  );
-  if (status != HAL_OK)
-  {
-    return status;
-  }
-
-  for (int i = 0; i < USER__SW_COUNT; ++i)
-  {
-    User_AdcPreCalibrationCommands.adc_channel = User_AdcChannelCommands[i];
-    status = User_CalibrateAdc(
-      (uint8_t *) &User_AdcPreCalibrationCommands
-    , sizeof(User_AdcPreCalibrationCommands)
-    );
-    if (status != HAL_OK)
-    {
-      return status;
-    }
-
-    status = User_CalibrateAdc(
-      User_AdcZeroScaleCalibrationCommands
-    , sizeof(User_AdcZeroScaleCalibrationCommands)
-    );
-    if (status != HAL_OK)
-    {
-      return status;
-    }
-    while (!HAL_GPIO_ReadPin(ADC_NRDY_GPIO_Port, ADC_NRDY_Pin))
-    {}
-
-    status = User_CalibrateAdc(
-      User_AdcFullScaleCalibrationCommands
-    , sizeof(User_AdcFullScaleCalibrationCommands)
-    );
-    if (status != HAL_OK)
-    {
-      return status;
-    }
-    while (!HAL_GPIO_ReadPin(ADC_NRDY_GPIO_Port, ADC_NRDY_Pin))
-    {}
-  }
-
-  status = HAL_SPI_Transmit(
-    &hspi2
-  , User_AdcPostInitCommands
-  , sizeof(User_AdcPostInitCommands)
-  , USER__ADC_INIT_TIMEOUT
-  );
-
-  return status;
-}
-
 void User_StartPollingAdc(void)
 {
-  if (User_AdcPollIndex != 0) return;
+  if (User_AdcPollStatus == USER__ADC_POLL_IN_PROCESS) return;
+  User_AdcPollStatus = USER__ADC_POLL_IN_PROCESS;
   User_FetchAdcChannel();
 }
 
@@ -259,16 +254,6 @@ void User_ReadAdcData(User_AdcData_t *data)
 
 // private functions
 
-static HAL_StatusTypeDef User_CalibrateAdc(uint8_t *commands, uint16_t command_count)
-{
-  return HAL_SPI_Transmit(
-    &hspi2
-  , commands
-  , command_count
-  , USER__ADC_INIT_TIMEOUT
-  );
-}
-
 static User_AdcPollStatus_t User_ContinuePollAdc(SPI_HandleTypeDef *hspi)
 {
   if (User_AdcPollIndex == USER__SW_COUNT)
@@ -284,7 +269,7 @@ static User_AdcPollStatus_t User_ContinuePollAdc(SPI_HandleTypeDef *hspi)
 static void User_FetchAdcChannel(void)
 {
   User_AdcFetchCommand.adc_channel = (
-      User_AdcChannelCommands[User_AdcPollIndex] | AD7718__RN__2_560_V
+      User_AdcChannelCommands[User_AdcPollIndex]
   );
 
   HAL_SPI_Transmit_DMA(

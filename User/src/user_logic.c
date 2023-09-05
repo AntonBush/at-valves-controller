@@ -9,14 +9,52 @@
 
 #include "user_sw.h"
 #include "user_swadc.h"
+#include "user_swadcinit.h"
 #include "user_swcurrent.h"
 #include "user_canrx.h"
 #include "user_cantx.h"
 
+#include "main.h"
+#include "can.h"
+#include "spi.h"
+#include "tim.h"
+#include "gpio.h"
+
+// private variables
+
 static bool User_InterruptUpdateFlag = false;
 static bool User_LoopUpdateFlag = false;
 
+// private function prototypes
+
 static void User_updateSwCurrent(void);
+
+// public functions
+
+void User_Init(void)
+{
+  HAL_CAN_Start(&hcan1);
+
+  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
+  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
+
+  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
+  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_2);
+  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_3);
+  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_4);
+
+  HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_1);
+  HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_2);
+  HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_3);
+  HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_4);
+
+  HAL_TIM_Base_Start_IT(&htim6);
+
+  if (User_InitAdc() != HAL_OK)
+  {
+    Error_Handler();
+  }
+}
 
 void User_updateData(void)
 {
@@ -48,6 +86,8 @@ void User_update(void)
     User_CanTx();
   }
 }
+
+// private functions
 
 void User_updateSwCurrent(void)
 {

@@ -37,10 +37,10 @@ typedef enum Ad7718_CommunicationAddress
 
 typedef enum Ad7718_Status
 {
-  AD7718__SR__READY              = USER__BIT8__7
-, AD7718__SR__CALIBRATION_STATUS = USER__BIT8__5
-, AD7718__SR__ADC_ERROR          = USER__BIT8__3
-, AD7718__SR__PLL_LOCK_STATUS    = USER__BIT8__0
+  AD7718__SR__READY                 = USER__BIT8__7
+, AD7718__SR__CALIBRATION_COMPLETED = USER__BIT8__5
+, AD7718__SR__ADC_ERROR             = USER__BIT8__3
+, AD7718__SR__PLL_LOCKED            = USER__BIT8__0
 } Ad7718_Status_t;
 
 typedef enum Ad7718_ModeControl

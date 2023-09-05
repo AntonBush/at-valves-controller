@@ -22,7 +22,6 @@ typedef struct User_AdcData
   uint8_t values[USER__SW_COUNT][USER__ADC_POLL_DATA_LENGTH];
 } User_AdcData_t;
 
-HAL_StatusTypeDef User_InitAdc(void);
 void User_StartPollingAdc(void);
 bool User_isAdcDataUpdated(void);
 void User_ReadAdcData(User_AdcData_t *data);
