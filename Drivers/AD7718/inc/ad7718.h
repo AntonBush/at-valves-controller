@@ -68,7 +68,7 @@ typedef enum Ad7718_Mode
 
 typedef enum Ad7718_AdcControl
 {
-  AD7718__ADCCON__UNIPOLAR_NOT_BIPOLAR = USER__BIT8__3
+  AD7718__ADCCON__UNIPOLAR = USER__BIT8__3
 } Ad7718_AdcControl_t;
 
 typedef enum Ad7718_AdcControlChannel8

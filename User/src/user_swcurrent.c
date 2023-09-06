@@ -11,13 +11,13 @@
 
 #define USER__CALCULATE_CURRENTS_IN_INTEGERS
 
-#define USER__MAX_SW_FEEDBACK_VOLTAGE 5
+#define USER__MAX_SW_FEEDBACK_VOLTAGE 0.64
 #define USER__MAX_ADC_DATA ((1 << 24) - 1)
 #define USER__CAST_TO_VOLTAGE_MODIFIER (1.0 * USER__MAX_SW_FEEDBACK_VOLTAGE / USER__MAX_ADC_DATA)
 
 #define USER__SW_FEEDBACK_RESISTANCE_OHM 620
 #define USER__SW_FEEDBACK_CURRENT_MODIFIER (10 * 1000)
-#define USER__SW_CURRENT_FACTOR_MODIFIER (100 * 8)
+#define USER__SW_CURRENT_FACTOR_MODIFIER (1000 * 5)
 
 /* @unused_reentrance
 // private typedefs
@@ -41,11 +41,11 @@ static User_SwCurrentData_t User_SwCurrentBuffer;
 
 // public functions
 
-uint16_t User_CalculateSwCurrentFactor125EMin5(User_UInt24_t adc_data)
+uint16_t User_CalculateSwCurrentFactor2EMin4(User_UInt24_t adc_data)
 {
 #ifdef USER__CALCULATE_CURRENTS_IN_INTEGERS
-  // adc_data * 5^6 / (31 * 2^17) = adc_data * 5^3 / 62 * 5^3 / 2^16
-  uint32_t temp = (adc_data.value * 125 / 62 * 125) >> 15;
+  // adc_data * 5^5 / (31 * 2^15) = adc_data * 5^3 / 31 * 5^2 / 2^15
+  uint32_t temp = (adc_data.value * 125 / 31 * 25) >> 14;
   // shift value to make average error ~ 0
   return (temp + temp % 2) >> 1;
 #else

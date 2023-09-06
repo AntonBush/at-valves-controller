@@ -103,7 +103,7 @@ void User_updateSwCurrent(void)
     {
       data.value = (data.value << 8) | (adc_data.values[i][j]);
     }
-    sw_current_data.values[i] = User_CalculateSwCurrentFactor125EMin5(data);
+    sw_current_data.values[i] = User_CalculateSwCurrentFactor2EMin4(data);
   }
   User_WriteSwCurrentData(&sw_current_data);
 }

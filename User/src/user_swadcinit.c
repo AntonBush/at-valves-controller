@@ -15,6 +15,8 @@
 
 // private defines
 
+//#define USER__CALIBRATE_ADC
+
 #define USER__ADC_INIT_TIMEOUT 5000U
 #define USER__ADC_RESET_SEQUENCE_ELEMENT (~((uint8_t)0))
 #define USER__ADC_RESET_SEQUENCE_LENGTH 4
@@ -37,7 +39,9 @@ extern SPI_HandleTypeDef hspi2;
 
 static HAL_StatusTypeDef User_ResetAdc(void);
 static HAL_StatusTypeDef User_PreInitAdc(void);
+#ifdef USER__CALIBRATE_ADC
 static HAL_StatusTypeDef User_CalibrateAdc(void);
+#endif
 static HAL_StatusTypeDef User_PostInitAdc(void);
 
 static inline HAL_StatusTypeDef User_TransmitToAdc(uint8_t *commands, uint8_t command_count)
@@ -98,11 +102,13 @@ HAL_StatusTypeDef User_InitAdc(void)
     return status;
   }
 
+#ifdef USER__CALIBRATE_ADC
   status = User_CalibrateAdc();
   if (status != HAL_OK)
   {
     return status;
   }
+#endif
 
   return User_PostInitAdc();
 }
@@ -126,10 +132,12 @@ static HAL_StatusTypeDef User_PreInitAdc(void)
   , 0
   , AD7718__CR_ADDR__FILTER
   , 0x03 // 1365.33 Hz
+//  , 0x13 // chop min
   };
   return User_TransmitToAdc(commands, sizeof(commands));
 }
 
+#ifdef USER__CALIBRATE_ADC
 static HAL_StatusTypeDef User_CalibrateAdc(void)
 {
   User_AdcChannelCommands_t pre_calibration_commands = {
@@ -179,6 +187,7 @@ static HAL_StatusTypeDef User_CalibrateAdc(void)
 
   return HAL_OK;
 }
+#endif
 
 static HAL_StatusTypeDef User_PostInitAdc(void)
 {
@@ -188,4 +197,3 @@ static HAL_StatusTypeDef User_PostInitAdc(void)
   };
   return User_TransmitToAdc(commands, sizeof(commands));
 }
-
