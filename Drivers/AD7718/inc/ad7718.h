@@ -10,6 +10,9 @@
 
 #include "user_bit.h"
 
+#define AD7718__ADC_DEFAULT_OFFSET 0x800000
+#define AD7718__ADC_DEFAULT_GAIN   0x500005
+
 typedef enum Ad7718_CommunicationControl
 {
   AD7718__CR__IGNORE_WRITE = USER__BIT8__7

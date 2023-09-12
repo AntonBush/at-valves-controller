@@ -20,6 +20,8 @@
 #include "tim.h"
 #include "gpio.h"
 
+#define USER__DEBUG_ADC_VOLTAGE
+
 // private variables
 
 static bool User_InterruptUpdateFlag = false;
@@ -103,7 +105,11 @@ void User_updateSwCurrent(void)
     {
       data.value = (data.value << 8) | (adc_data.values[i][j]);
     }
-    sw_current_data.values[i] = User_CalculateSwCurrentFactor2EMin4(data);
+#ifdef USER__DEBUG_ADC_VOLTAGE
+    sw_current_data.values[i] = (((data.value * 125 >> 8) * 25 >> 8) + 1) >> 1;
+#else
+    sw_current_data.values[i] = User_CalculateSwCurrentFactor125EMin5(data);
+#endif
   }
   User_WriteSwCurrentData(&sw_current_data);
 }

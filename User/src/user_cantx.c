@@ -14,9 +14,9 @@
 
 typedef enum User_CurrentCanId
 {
-  USER__CURRENT_CAN_ID__T3 = 0x123FFFFF
-, USER__CURRENT_CAN_ID__T4 = 0x124FFFFF
-, USER__CURRENT_CAN_ID__T5 = 0x125FFFFF
+  USER__CURRENT_CAN_ID__SW_1_2  = 0x123FFFFF
+, USER__CURRENT_CAN_ID__SW_3_6  = 0x124FFFFF
+, USER__CURRENT_CAN_ID__SW_7_10 = 0x125FFFFF
 } User_CurrentCanId_t;
 
 static User_CanTxMessage_t User_CanTxMessage = {
@@ -42,21 +42,21 @@ void User_CanTx(void)
   User_SwCurrentData_t sw_current_data;
   User_ReadSwCurrentData(&sw_current_data);
 
-  User_CanTxInitMessage(USER__CURRENT_CAN_ID__T3);
+  User_CanTxInitMessage(USER__CURRENT_CAN_ID__SW_1_2);
   User_SetRegularParam(User_CanTxMessage.content, 16, 0, sw_current_data.values[0]);
   User_SetRegularParam(User_CanTxMessage.content, 16, 1, sw_current_data.values[1]);
   User_SetRegularParam(User_CanTxMessage.content, 16, 2, User_CanTxLifeCounter++);
   User_SetRegularParam(User_CanTxMessage.content, 16, 3, User_CanRxLifeCounter);
   User_AddCanMessage(&User_CanTxMessage);
 
-  User_CanTxInitMessage(USER__CURRENT_CAN_ID__T4);
+  User_CanTxInitMessage(USER__CURRENT_CAN_ID__SW_3_6);
   User_SetRegularParam(User_CanTxMessage.content, 16, 0, sw_current_data.values[2]);
   User_SetRegularParam(User_CanTxMessage.content, 16, 1, sw_current_data.values[3]);
   User_SetRegularParam(User_CanTxMessage.content, 16, 2, sw_current_data.values[4]);
   User_SetRegularParam(User_CanTxMessage.content, 16, 3, sw_current_data.values[5]);
   User_AddCanMessage(&User_CanTxMessage);
 
-  User_CanTxInitMessage(USER__CURRENT_CAN_ID__T5);
+  User_CanTxInitMessage(USER__CURRENT_CAN_ID__SW_7_10);
   User_SetRegularParam(User_CanTxMessage.content, 16, 0, sw_current_data.values[6]);
   User_SetRegularParam(User_CanTxMessage.content, 16, 1, sw_current_data.values[7]);
   User_SetRegularParam(User_CanTxMessage.content, 16, 2, sw_current_data.values[8]);
