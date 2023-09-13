@@ -228,6 +228,7 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
 
   User_AdcDataBuffers[User_ActiveAdcDataBuffer].isUpdated = true;
   User_AdcPollStatus = USER__ADC_POLL_FINISHED;
+  User_StartPollingAdc();
 }
 
 // public functions

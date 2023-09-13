@@ -24,8 +24,23 @@
 #define USER__ADC_RESET_SEQUENCE_ELEMENT (~((uint8_t)0))
 #define USER__ADC_RESET_SEQUENCE_LENGTH 4
 
-#define USER__ADC_OFFSET AD7718__ADC_DEFAULT_OFFSET
-#define USER__ADC_GAIN   (AD7718__ADC_DEFAULT_GAIN /*- AD7718__ADC_DEFAULT_GAIN / 2*/)
+// Чем меньше сдвиг, тем выше график
+#define USER__ADC_OFFSET \
+( \
+  AD7718__ADC_DEFAULT_OFFSET \
++ AD7718__ADC_DEFAULT_OFFSET / (1 << 7) \
++ AD7718__ADC_DEFAULT_OFFSET / (1 << 10) \
++ AD7718__ADC_DEFAULT_OFFSET / (1 << 11) \
++ AD7718__ADC_DEFAULT_OFFSET / (1 << 12) \
++ AD7718__ADC_DEFAULT_OFFSET / (1 << 13) \
+)
+
+// Чем больше усиление, тем больше наклон графика
+#define USER__ADC_GAIN \
+( \
+  AD7718__ADC_DEFAULT_GAIN \
+  + AD7718__ADC_DEFAULT_GAIN / (1 << 4) \
+)
 
 #ifdef USER__ENABLE_CHOP
 #define USER__CHOP_FLAG 0
@@ -55,7 +70,7 @@ static HAL_StatusTypeDef User_CalibrateAdc(void);
 #endif
 static HAL_StatusTypeDef User_PostInitAdc(void);
 
-static inline HAL_StatusTypeDef User_TransmitToAdc(uint8_t *commands, uint8_t command_count)
+__STATIC_INLINE HAL_StatusTypeDef User_TransmitToAdc(uint8_t *commands, uint8_t command_count)
 {
   return HAL_SPI_Transmit(
     &hspi2
@@ -65,7 +80,7 @@ static inline HAL_StatusTypeDef User_TransmitToAdc(uint8_t *commands, uint8_t co
   );
 }
 
-static inline HAL_StatusTypeDef User_TransmitReceiveToAdc(
+__STATIC_INLINE HAL_StatusTypeDef User_TransmitReceiveToAdc(
   uint8_t *commands
 , uint8_t *data
 , uint8_t command_count
@@ -80,7 +95,7 @@ static inline HAL_StatusTypeDef User_TransmitReceiveToAdc(
   );
 }
 
-static inline void User_WaitAdcCalibaration(void)
+__STATIC_INLINE void User_WaitAdcCalibaration(void)
 {
   while (HAL_GPIO_ReadPin(ADC_NRDY_GPIO_Port, ADC_NRDY_Pin))
   {}

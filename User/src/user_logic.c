@@ -20,7 +20,7 @@
 #include "tim.h"
 #include "gpio.h"
 
-#define USER__DEBUG_ADC_VOLTAGE
+//#define USER__DEBUG_ADC_VOLTAGE
 
 // private variables
 
@@ -56,6 +56,7 @@ void User_Init(void)
   {
     Error_Handler();
   }
+  User_StartPollingAdc();
 }
 
 void User_updateData(void)
@@ -83,7 +84,7 @@ void User_update(void)
   {
     User_LoopUpdateFlag = User_InterruptUpdateFlag;
     //__disable_irq();
-    User_StartPollingAdc();
+    //User_StartPollingAdc();
     //__enable_irq();
     User_CanTx();
   }
@@ -106,7 +107,7 @@ void User_updateSwCurrent(void)
       data.value = (data.value << 8) | (adc_data.values[i][j]);
     }
 #ifdef USER__DEBUG_ADC_VOLTAGE
-    sw_current_data.values[i] = (((data.value * 125 >> 8) * 25 >> 8) + 1) >> 1;
+    sw_current_data.values[i] = (((data.value * 25) >> 9) + 1) >> 1;
 #else
     sw_current_data.values[i] = User_CalculateSwCurrentFactor125EMin5(data);
 #endif

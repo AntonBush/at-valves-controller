@@ -9,23 +9,21 @@
 
 // private defines
 
-#define USER__CALCULATE_CURRENTS_BY_REAL_MESUAREMENTS_TABLE
+//#define USER__CALCULATE_CURRENTS_BY_REAL_MESUAREMENTS_TABLE
 
-#define USER__SW_CURRENT_BUFFER_SIZE_EXPONENT 2U
+#define USER__SW_CURRENT_BUFFER_SIZE_EXPONENT 4U
 #define USER__SW_CURRENT_BUFFER_SIZE (1 << USER__SW_CURRENT_BUFFER_SIZE_EXPONENT)
 
-#define USER__MAX_SW_FEEDBACK_VOLTAGE 5.0
+#define USER__MAX_SW_FEEDBACK_VOLTAGE 5.12
 #define USER__MAX_ADC_DATA ((1 << 24) - 1)
-#define USER__ADC_MAGIC_OFFSET 0.065
 
-#define USER__SW_FEEDBACK_RESISTANCE_OHM 620U
+#define USER__SW_FEEDBACK_RESISTANCE_OHM 910U
 #define USER__SW_FEEDBACK_CURRENT_MODIFIER (10U * 1000U)
 #define USER__SW_CURRENT_FACTOR_MODIFIER (100U * 8U)
 
 #define USER__CAST_DATA_TO_VOLTAGE(data) \
 ( \
   (data) * USER__MAX_SW_FEEDBACK_VOLTAGE / USER__MAX_ADC_DATA \
-- USER__ADC_MAGIC_OFFSET \
 )
 #define USER__CAST_FB_VOLTAGE_TO_FB_CURRENT(fb_voltage) \
 ((fb_voltage) / USER__SW_FEEDBACK_RESISTANCE_OHM)
@@ -63,7 +61,6 @@ uint16_t User_CalculateSwCurrentFactor125EMin5(User_UInt24_t adc_data)
   return (temp + temp % 2) >> 1;
 #else
   float feedback_voltage = USER__CAST_DATA_TO_VOLTAGE(adc_data.value);
-  if (feedback_voltage < 0) feedback_voltage = 0;
   float feedback_current = USER__CAST_FB_VOLTAGE_TO_FB_CURRENT(feedback_voltage);
   float switch_current = USER__CAST_FB_CURRENT_TO_SW_CURRENT(feedback_current);
   return USER__APPLY_FACTOR_TO_SW_CURRENT(switch_current);
