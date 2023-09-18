@@ -9,7 +9,7 @@
 
 // private defines
 
-//#define USER__CALCULATE_CURRENTS_BY_REAL_MESUAREMENTS_TABLE
+#define USER__CALCULATE_CURRENTS_BY_REAL_MESUAREMENTS_TABLE
 
 #define USER__SW_CURRENT_BUFFER_SIZE_EXPONENT 4U
 #define USER__SW_CURRENT_BUFFER_SIZE (1 << USER__SW_CURRENT_BUFFER_SIZE_EXPONENT)
@@ -43,7 +43,7 @@ static struct User_SwCurrentBufferIndex_t {
 // private function prototypes
 
 #ifdef USER__CALCULATE_CURRENTS_BY_REAL_MESUAREMENTS_TABLE
-static float User_CalculateSwCurrentByRealMesuarementsTable(float feedback_voltage);
+static float User_CalculateSwCurrentByRealMesuarementsTable(float feedback_current);
 #endif
 
 // public functions
@@ -52,13 +52,8 @@ uint16_t User_CalculateSwCurrentFactor125EMin5(User_UInt24_t adc_data)
 {
 #ifdef USER__CALCULATE_CURRENTS_BY_REAL_MESUAREMENTS_TABLE
   float feedback_voltage = USER__CAST_DATA_TO_VOLTAGE(adc_data.value);
-  if (feedback_voltage < 0) feedback_voltage = 0;
   float switch_current = User_CalculateSwCurrentByRealMesuarementsTable(feedback_voltage);
   return USER__APPLY_FACTOR_TO_SW_CURRENT(switch_current);
-  // adc_data * 5^6 / (31 * 2^17) = adc_data * 5^3 / 62 * 5^3 / 2^16
-  uint32_t temp = (adc_data.value * 125 / 62 * 125) >> 15;
-  // shift value to make average error ~ 0
-  return (temp + temp % 2) >> 1;
 #else
   float feedback_voltage = USER__CAST_DATA_TO_VOLTAGE(adc_data.value);
   float feedback_current = USER__CAST_FB_VOLTAGE_TO_FB_CURRENT(feedback_voltage);
@@ -93,13 +88,16 @@ void User_WriteSwCurrentData(User_SwCurrentData_t *data)
 #ifdef USER__CALCULATE_CURRENTS_BY_REAL_MESUAREMENTS_TABLE
 static float User_CalculateSwCurrentByRealMesuarementsTable(float feedback_voltage)
 {
-  feedback_voltage *= 1000;
-  if (feedback_voltage < 1.8) return feedback_voltage / 1.8;
+  float feedback_current = USER__CAST_FB_VOLTAGE_TO_FB_CURRENT(feedback_voltage);
 
-  if (feedback_voltage < 2.3) return (feedback_voltage + 3.5) / 53;
+  if (feedback_voltage < 0.0043) return feedback_current * 21162;
 
-  if (feedback_voltage < 70.2) return (feedback_voltage + 6.5) / 59;
+  if (feedback_voltage < 0.0571) return feedback_current * 10341 + 0.051;
 
-  return (feedback_voltage + 16) / 66;
+  if (feedback_voltage < 0.15) return feedback_current * 9795 + 0.085;
+
+  if (feedback_voltage < 0.2769) return feedback_current * 8605 + 0.282;
+
+  return USER__CAST_FB_CURRENT_TO_SW_CURRENT(feedback_current);
 }
 #endif

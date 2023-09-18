@@ -88,112 +88,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   HAL_NVIC_DisableIRQ(EXTI0_IRQn);
 
   User_ReadAdcChannel();
-/*
-  typedef struct
-  {
-    uint8_t command;
-    uint8_t dummy;
-  } tx_t;
-
-  typedef struct
-  {
-    uint8_t dummy;
-    uint8_t rx;
-  } rx_t;
-
-  tx_t write_commands[] = {
-    {
-      .command = AD7718__CR__READ | AD7718__CR_ADDR__STATUS_ON_READ
-    , .dummy = 0xFF
-    }
-  , {
-      .command = AD7718__CR__READ | AD7718__CR_ADDR__MODE
-    , .dummy = 0xFE
-    }
-  , {
-      .command = AD7718__CR__READ | AD7718__CR_ADDR__ADC_CONTROL
-    , .dummy = 0xFD
-    }
-  , {
-      .command = AD7718__CR__READ | AD7718__CR_ADDR__FILTER
-    , .dummy = 0xFC
-    }
-  };
-  typedef volatile uint8_t (* volatile u8p)[sizeof(write_commands)];
-  rx_t read_status[sizeof(write_commands) / sizeof(tx_t)];
-  u8p tx = (u8p)(write_commands);
-  u8p rx = (u8p)(read_status);
-
-  for (int i = 0; i < sizeof(write_commands) / sizeof(tx_t); ++i)
-  {
-    read_status[i].dummy = read_status[i].rx = 0;
-  }
-
-
-  SET_BIT(SPI2->CR1, SPI_CR1_SPE);
-
-  SPI2->DR = (*tx)[0];
-  size_t i = 1;
-  for (; i < sizeof(write_commands); ++i)
-  {
-    while (READ_BIT(SPI2->SR, SPI_SR_TXE) == 0)
-    {}
-    SPI2->DR = (*tx)[i];
-    while (READ_BIT(SPI2->SR, SPI_SR_RXNE) == 0)
-    {}
-    (*rx)[i - 1] = SPI2->DR;
-  }
-  while (READ_BIT(SPI2->SR, SPI_SR_RXNE) == 0)
-  {}
-  (*rx)[i - 1] = SPI2->DR;
-
-  while (READ_BIT(SPI2->SR, SPI_SR_TXE) == 0)
-  {}
-  while (READ_BIT(SPI2->SR, SPI_SR_BSY))
-  {}
-  CLEAR_BIT(SPI2->CR1, SPI_CR1_SPE);
-
-  for (int i = 0; i < sizeof(write_commands); ++i)
-  {
-    *((uint8_t *)User_AdcPollValues) = (*rx)[i];
-  }
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-  HAL_StatusTypeDef status = HAL_SPI_TransmitReceive(
-    &hspi2
-  , (uint8_t *)(write_commands)
-  , (uint8_t *)(read_status)
-  , sizeof(write_commands)
-  , 5000
-  );
-  if (status != HAL_OK)
-  {
-    while(1);
-  }
-
-  HAL_SPI_TransmitReceive(
-    &hspi2
-  , (uint8_t *)(&User_AdcPullCommand)
-  , (uint8_t *)(User_AdcPollValues + User_AdcPollIndex)
-  , sizeof(User_AdcPullCommand)
-  , 5000
-  );
-  ++User_AdcPollIndex;
-
-  if (User_AdcPollIndex == USER__SW_COUNT)
-  {
-    User_AdcPollIndex = 0;
-  }
-
-  User_AdcFetchCommand.adc_channel = (
-      User_AdcChannelCommands[User_AdcPollIndex]
-  );
-  HAL_SPI_Transmit(
-    &hspi2
-  , (uint8_t *)(&User_AdcFetchCommand)
-  , sizeof(User_AdcFetchCommand)
-  , 5000
-  );
-*/
 }
 
 void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
@@ -273,6 +167,7 @@ static void User_FetchAdcChannel(void)
       User_AdcChannelCommands[User_AdcPollIndex]
   );
 
+  HAL_NVIC_ClearPendingIRQ(EXTI0_IRQn);
   HAL_SPI_Transmit_DMA(
     &hspi2
   , (uint8_t *)(&User_AdcFetchCommand)
