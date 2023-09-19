@@ -74,6 +74,8 @@ static User_AdcDataBuffer_t User_AdcDataBuffers[USER__ADC_DATA_BUFFER__COUNT] = 
 static User_AdcDataBufferIndex_t User_ActiveAdcDataBuffer = USER__ADC_DATA_BUFFER__A;
 static User_AdcDataBufferIndex_t User_LockedAdcDataBuffer = USER__ADC_DATA_NO_BUFFER;
 
+static bool User_AdcPollingTimeout = true;
+
 // private function prototypes
 
 static User_AdcPollStatus_t User_ContinuePollAdc(SPI_HandleTypeDef *hspi);
@@ -99,6 +101,7 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
 void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
 {
   if (hspi != &hspi2) return;
+  User_AdcPollingTimeout = true;
 
   if (User_ContinuePollAdc(hspi) != USER__ADC_POLL_FINISHED) return;
 
@@ -145,6 +148,18 @@ void User_ReadAdcData(User_AdcData_t *data)
   (*data) = User_AdcDataBuffers[User_LockedAdcDataBuffer].data;
   User_AdcDataBuffers[User_LockedAdcDataBuffer].isUpdated = false;
   User_LockedAdcDataBuffer = USER__ADC_DATA_NO_BUFFER;
+}
+
+void User_CheckAdcPolling(void)
+{
+  if (!User_AdcPollingTimeout)
+  {
+    User_AdcPollIndex = 0;
+    User_AdcPollStatus = USER__ADC_POLL_FINISHED;
+    User_StartPollingAdc();
+    return;
+  }
+  User_AdcPollingTimeout = false;
 }
 
 // private functions

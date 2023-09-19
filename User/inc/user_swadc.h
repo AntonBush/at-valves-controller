@@ -25,5 +25,6 @@ typedef struct User_AdcData
 void User_StartPollingAdc(void);
 bool User_isAdcDataUpdated(void);
 void User_ReadAdcData(User_AdcData_t *data);
+void User_CheckAdcPolling(void);
 
 #endif /* INC_USER_SWADC_H_ */
