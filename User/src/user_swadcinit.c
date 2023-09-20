@@ -24,7 +24,7 @@
 #define USER__ADC_RESET_SEQUENCE_ELEMENT (~((uint8_t)0))
 #define USER__ADC_RESET_SEQUENCE_LENGTH 4
 
-// Чем меньше сдвиг, тем выше график
+// Чем больше сдвиг, тем ниже график
 #define USER__ADC_OFFSET \
 ( \
   AD7718__ADC_DEFAULT_OFFSET \
@@ -33,6 +33,11 @@
 + AD7718__ADC_DEFAULT_OFFSET / (1 << 11) \
 + AD7718__ADC_DEFAULT_OFFSET / (1 << 12) \
 + AD7718__ADC_DEFAULT_OFFSET / (1 << 13) \
+)
+
+#define USER__ADC_5_OFFSET \
+( \
+    0xFFFFFF \
 )
 
 // Чем больше усиление, тем больше наклон графика
@@ -216,6 +221,16 @@ static HAL_StatusTypeDef User_CalibrateAdc(void)
   , (uint8_t)(USER__ADC_GAIN >>  8)
   , (uint8_t)(USER__ADC_GAIN >>  0)
   };
+  uint8_t calibration_5_commands[] = {
+    AD7718__CR_ADDR__ADC_OFFSET
+  , (uint8_t)(USER__ADC_5_OFFSET >> 16)
+  , (uint8_t)(USER__ADC_5_OFFSET >>  8)
+  , (uint8_t)(USER__ADC_5_OFFSET >>  0)
+  , AD7718__CR_ADDR__ADC_GAIN
+  , (uint8_t)(USER__ADC_GAIN >> 16)
+  , (uint8_t)(USER__ADC_GAIN >>  8)
+  , (uint8_t)(USER__ADC_GAIN >>  0)
+  };
 #endif
 #ifdef USER__DEBUG_CALIBRATION
   struct
@@ -273,7 +288,10 @@ static HAL_StatusTypeDef User_CalibrateAdc(void)
     }
     User_WaitAdcCalibaration();
 #else
+//    uint8_t is_five = (i + 1) % 5 == 0;
     status = User_TransmitToAdc(
+//      is_five ? calibration_5_commands : calibration_commands
+//    , sizeof(is_five ? calibration_5_commands : calibration_commands)
       calibration_commands
     , sizeof(calibration_commands)
     );
