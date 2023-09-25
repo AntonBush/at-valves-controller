@@ -35,11 +35,6 @@
 + AD7718__ADC_DEFAULT_OFFSET / (1 << 13) \
 )
 
-#define USER__ADC_5_OFFSET \
-( \
-    0xFFFFFF \
-)
-
 // Чем больше усиление, тем больше наклон графика
 #define USER__ADC_GAIN \
 ( \
@@ -71,6 +66,7 @@ extern SPI_HandleTypeDef hspi2;
 static HAL_StatusTypeDef User_ResetAdc(void);
 static HAL_StatusTypeDef User_PreInitAdc(void);
 #ifdef USER__CALIBRATE_ADC
+static HAL_StatusTypeDef User_PrepareToCalibrateAdc(void);
 static HAL_StatusTypeDef User_CalibrateAdc(void);
 #endif
 static HAL_StatusTypeDef User_PostInitAdc(void);
@@ -149,6 +145,12 @@ HAL_StatusTypeDef User_InitAdc(void)
   }
 
 #ifdef USER__CALIBRATE_ADC
+  status = User_PrepareToCalibrateAdc();
+  if (status != HAL_OK)
+  {
+    return status;
+  }
+
   status = User_CalibrateAdc();
   if (status != HAL_OK)
   {
@@ -196,6 +198,16 @@ struct
 #endif
 
 #ifdef USER__CALIBRATE_ADC
+static HAL_StatusTypeDef User_PrepareToCalibrateAdc(void)
+{
+  uint8_t commands[] = {
+    AD7718__CR_ADDR__MODE
+  , USER__ADC_MODE(AD7718__MR_MOD__POWER_DOWN)
+  };
+
+  return User_TransmitToAdc(commands, sizeof(commands));
+}
+
 static HAL_StatusTypeDef User_CalibrateAdc(void)
 {
   User_AdcChannelCommands_t pre_calibration_commands = {
@@ -216,16 +228,6 @@ static HAL_StatusTypeDef User_CalibrateAdc(void)
   , (uint8_t)(USER__ADC_OFFSET >> 16)
   , (uint8_t)(USER__ADC_OFFSET >>  8)
   , (uint8_t)(USER__ADC_OFFSET >>  0)
-  , AD7718__CR_ADDR__ADC_GAIN
-  , (uint8_t)(USER__ADC_GAIN >> 16)
-  , (uint8_t)(USER__ADC_GAIN >>  8)
-  , (uint8_t)(USER__ADC_GAIN >>  0)
-  };
-  uint8_t calibration_5_commands[] = {
-    AD7718__CR_ADDR__ADC_OFFSET
-  , (uint8_t)(USER__ADC_5_OFFSET >> 16)
-  , (uint8_t)(USER__ADC_5_OFFSET >>  8)
-  , (uint8_t)(USER__ADC_5_OFFSET >>  0)
   , AD7718__CR_ADDR__ADC_GAIN
   , (uint8_t)(USER__ADC_GAIN >> 16)
   , (uint8_t)(USER__ADC_GAIN >>  8)
@@ -255,7 +257,7 @@ static HAL_StatusTypeDef User_CalibrateAdc(void)
   );
 #endif
 
-  for (int i = 0; i < USER__SW_COUNT; ++i)
+  for (int i = 0; i < USER__SW_COUNT / 2; ++i)
   {
     pre_calibration_commands.adc_channel = User_AdcChannelCommands[i];
     HAL_StatusTypeDef status = User_TransmitToAdc(
@@ -288,10 +290,7 @@ static HAL_StatusTypeDef User_CalibrateAdc(void)
     }
     User_WaitAdcCalibaration();
 #else
-//    uint8_t is_five = (i + 1) % 5 == 0;
     status = User_TransmitToAdc(
-//      is_five ? calibration_5_commands : calibration_commands
-//    , sizeof(is_five ? calibration_5_commands : calibration_commands)
       calibration_commands
     , sizeof(calibration_commands)
     );
@@ -300,8 +299,21 @@ static HAL_StatusTypeDef User_CalibrateAdc(void)
       return status;
     }
 #endif
+  }
 
 #ifdef USER__DEBUG_CALIBRATION
+  for (int i = 0; i < USER__SW_COUNT; ++i)
+  {
+    pre_calibration_commands.adc_channel = User_AdcChannelCommands[i];
+    HAL_StatusTypeDef status = User_TransmitToAdc(
+      (uint8_t *) &pre_calibration_commands
+    , sizeof(pre_calibration_commands)
+    );
+    if (status != HAL_OK)
+    {
+      return status;
+    }
+
     User_TransmitReceiveToAdc(
       (uint8_t *)(&debug_calibration_commands)
     , (uint8_t *)(&debug_calibration_data)
@@ -318,8 +330,8 @@ static HAL_StatusTypeDef User_CalibrateAdc(void)
       | debug_calibration_data.gain[1] <<  8
       | debug_calibration_data.gain[2] <<  0
     );
-#endif
   }
+#endif
 
   return HAL_OK;
 }
