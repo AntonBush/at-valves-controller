@@ -38,10 +38,10 @@ void MX_CAN1_Init(void)
 
   /* USER CODE END CAN1_Init 1 */
   hcan1.Instance = CAN1;
-  hcan1.Init.Prescaler = 9;
+  hcan1.Init.Prescaler = 2;
   hcan1.Init.Mode = CAN_MODE_NORMAL;
   hcan1.Init.SyncJumpWidth = CAN_SJW_1TQ;
-  hcan1.Init.TimeSeg1 = CAN_BS1_13TQ;
+  hcan1.Init.TimeSeg1 = CAN_BS1_15TQ;
   hcan1.Init.TimeSeg2 = CAN_BS2_2TQ;
   hcan1.Init.TimeTriggeredMode = DISABLE;
   hcan1.Init.AutoBusOff = ENABLE;
@@ -58,10 +58,10 @@ void MX_CAN1_Init(void)
   filter_config.FilterBank = 0;
   filter_config.FilterMode = CAN_FILTERMODE_IDMASK;
   filter_config.FilterScale = CAN_FILTERSCALE_32BIT;
-  filter_config.FilterIdHigh = 0x0000;
-  filter_config.FilterIdLow = 0x0000;
-  filter_config.FilterMaskIdHigh = 0x0000;
-  filter_config.FilterMaskIdLow = 0x0000;
+  filter_config.FilterIdHigh = 0x113FFFFF >> (16 - 3);
+  filter_config.FilterIdLow = (0x113FFFFF << 3) | (1 << 2);
+  filter_config.FilterMaskIdHigh = 0xFF8F << 3;
+  filter_config.FilterMaskIdLow = 0xFFFF;
   filter_config.FilterFIFOAssignment = CAN_RX_FIFO0;
   filter_config.FilterActivation = ENABLE;
   //sFilterConfig.SlaveStartFilterBank = 14;
