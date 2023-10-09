@@ -7,25 +7,27 @@
 
 #include "user_swcurrent.h"
 
-// private defines
+#include "math.h"
 
-#define USER__SW_CURRENT_BUFFER_SIZE_EXPONENT 1U
-#define USER__SW_CURRENT_BUFFER_SIZE (1 << USER__SW_CURRENT_BUFFER_SIZE_EXPONENT)
+// private defines
 
 #define USER__MAX_SW_FEEDBACK_VOLTAGE 5.12
 #define USER__MAX_ADC_DATA ((1 << 24) - 1)
-
-#define USER__SW_FEEDBACK_RESISTANCE_OHM 0.25
-#define USER__SW_CURRENT_FACTOR_MODIFIER (100U * 8U)
-
 #define USER__CAST_DATA_TO_VOLTAGE(data) \
 ( \
   (data) * USER__MAX_SW_FEEDBACK_VOLTAGE / USER__MAX_ADC_DATA \
 )
+
+#define USER__SW_FEEDBACK_RESISTANCE_OHM 0.25
 #define USER__CAST_FB_VOLTAGE_TO_SW_CURRENT(fb_voltage) \
 ((fb_voltage) / USER__SW_FEEDBACK_RESISTANCE_OHM)
-#define USER__APPLY_FACTOR_TO_SW_CURRENT(sw_current) \
-((sw_current) * USER__SW_CURRENT_FACTOR_MODIFIER)
+
+#define USER__SW_CURRENT_FACTOR_MODIFIER (100U * 8U)
+#define USER__APPLY_SW_CURRENT_FACTOR(sw_current) \
+round((sw_current) * USER__SW_CURRENT_FACTOR_MODIFIER)
+
+#define USER__SW_CURRENT_BUFFER_SIZE_EXPONENT 1U
+#define USER__SW_CURRENT_BUFFER_SIZE (1 << USER__SW_CURRENT_BUFFER_SIZE_EXPONENT)
 
 // private variables
 
@@ -35,13 +37,15 @@ static struct User_SwCurrentBufferIndex_t {
   unsigned value : USER__SW_CURRENT_BUFFER_SIZE_EXPONENT;
 } User_SwCurrentBufferIndex = {0};
 
+// private function prototypes
+
 // public functions
 
 uint16_t User_CalculateSwCurrentFactor125EMin5(User_UInt24_t adc_data)
 {
   float feedback_voltage = USER__CAST_DATA_TO_VOLTAGE(adc_data.value);
   float switch_current = USER__CAST_FB_VOLTAGE_TO_SW_CURRENT(feedback_voltage);
-  return USER__APPLY_FACTOR_TO_SW_CURRENT(switch_current);
+  return USER__APPLY_SW_CURRENT_FACTOR(switch_current);
 }
 
 void User_ReadSwCurrentData(User_SwCurrentData_t *data)
@@ -64,3 +68,5 @@ void User_WriteSwCurrentData(User_SwCurrentData_t *data)
     User_SwAverageCurrent.values[i] = sum / USER__SW_CURRENT_BUFFER_SIZE;
   }
 }
+
+// private functions

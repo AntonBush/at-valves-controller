@@ -86,8 +86,6 @@ void Error_Handler(void);
 #define PWM_SW_8_GPIO_Port GPIOB
 #define PWM_SW_9_Pin GPIO_PIN_8
 #define PWM_SW_9_GPIO_Port GPIOB
-#define PWM_SW_10_Pin GPIO_PIN_9
-#define PWM_SW_10_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

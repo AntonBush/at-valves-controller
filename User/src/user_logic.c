@@ -20,6 +20,8 @@
 #include "tim.h"
 #include "gpio.h"
 
+// private defines
+
 //#define USER__DEBUG_ADC_VOLTAGE
 
 // private variables
@@ -83,9 +85,6 @@ void User_update(void)
   if (User_LoopUpdateFlag != User_InterruptUpdateFlag)
   {
     User_LoopUpdateFlag = User_InterruptUpdateFlag;
-    //__disable_irq();
-    //User_StartPollingAdc();
-    //__enable_irq();
     User_CanTx();
   }
 }

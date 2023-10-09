@@ -143,10 +143,6 @@ void MX_TIM4_Init(void)
   {
     Error_Handler();
   }
-  if (HAL_TIM_PWM_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_4) != HAL_OK)
-  {
-    Error_Handler();
-  }
   /* USER CODE BEGIN TIM4_Init 2 */
 
   /* USER CODE END TIM4_Init 2 */
@@ -335,9 +331,8 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef* timHandle)
     PB6     ------> TIM4_CH1
     PB7     ------> TIM4_CH2
     PB8     ------> TIM4_CH3
-    PB9     ------> TIM4_CH4
     */
-    GPIO_InitStruct.Pin = PWM_SW_7_Pin|PWM_SW_8_Pin|PWM_SW_9_Pin|PWM_SW_10_Pin;
+    GPIO_InitStruct.Pin = PWM_SW_7_Pin|PWM_SW_8_Pin|PWM_SW_9_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);

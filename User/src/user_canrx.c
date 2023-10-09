@@ -45,11 +45,13 @@ void User_CanRx(User_CanRxMessage_t *message)
     htim3.Instance->CCR2 = User_GetRegularParam(message->content, 16, 3);
     break;
   case USER__PWM_CAN_ID__SW_7_10:
-    // T4: 1-4
+    // T4: 1-3
     htim4.Instance->CCR1 = User_GetRegularParam(message->content, 16, 0);
     htim4.Instance->CCR2 = User_GetRegularParam(message->content, 16, 1);
     htim4.Instance->CCR3 = User_GetRegularParam(message->content, 16, 2);
+/* Больше не измеряем 10-ый ключ
     htim4.Instance->CCR4 = User_GetRegularParam(message->content, 16, 3);
+*/
     break;
   }
 }
