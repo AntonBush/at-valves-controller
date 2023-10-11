@@ -57,9 +57,9 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define ADC_NRDY_Pin GPIO_PIN_0
-#define ADC_NRDY_GPIO_Port GPIOC
-#define ADC_NRDY_EXTI_IRQn EXTI0_IRQn
+#define ADC1_NRDY_Pin GPIO_PIN_0
+#define ADC1_NRDY_GPIO_Port GPIOC
+#define ADC1_NRDY_EXTI_IRQn EXTI0_IRQn
 #define PWM_SW_1_Pin GPIO_PIN_0
 #define PWM_SW_1_GPIO_Port GPIOA
 #define PWM_SW_2_Pin GPIO_PIN_1
@@ -72,14 +72,19 @@ void Error_Handler(void);
 #define PWM_SW_5_GPIO_Port GPIOA
 #define PWM_SW_6_Pin GPIO_PIN_7
 #define PWM_SW_6_GPIO_Port GPIOA
-#define ADC_NSS_Pin GPIO_PIN_12
-#define ADC_NSS_GPIO_Port GPIOB
+#define ADC1_NSS_Pin GPIO_PIN_12
+#define ADC1_NSS_GPIO_Port GPIOB
 #define ADC_SCK_Pin GPIO_PIN_13
 #define ADC_SCK_GPIO_Port GPIOB
 #define ADC_OUT_Pin GPIO_PIN_14
 #define ADC_OUT_GPIO_Port GPIOB
 #define ADC_IN_Pin GPIO_PIN_15
 #define ADC_IN_GPIO_Port GPIOB
+#define ADC2_NRDY_Pin GPIO_PIN_10
+#define ADC2_NRDY_GPIO_Port GPIOC
+#define ADC2_NRDY_EXTI_IRQn EXTI15_10_IRQn
+#define ADC2_NSS_Pin GPIO_PIN_4
+#define ADC2_NSS_GPIO_Port GPIOB
 #define PWM_SW_7_Pin GPIO_PIN_6
 #define PWM_SW_7_GPIO_Port GPIOB
 #define PWM_SW_8_Pin GPIO_PIN_7
