@@ -1,2 +1,9 @@
 /Debug
 /Release
+/build
+/.vs
+/.vscode
+/CMakeLists.txt
+/CMakePresets.json
+/vcpkg-configuration.json
+/cmake

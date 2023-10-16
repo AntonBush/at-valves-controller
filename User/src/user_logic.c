@@ -22,7 +22,7 @@
 
 // private defines
 
-//#define USER__DEBUG_ADC_VOLTAGE
+#define USER__DEBUG_ADC_VOLTAGE
 
 // private variables
 
@@ -106,7 +106,9 @@ void User_updateSwCurrent(void)
       data.value = (data.value << 8) | (adc_data.values[i][j]);
     }
 #ifdef USER__DEBUG_ADC_VOLTAGE
-    sw_current_data.values[i] = (((data.value * 25) >> 9) + 1) >> 1;
+    // factor = 0.00125 = 1 / 800
+    // 2^24 - 1 ~ 0.32
+    sw_current_data.values[i] = ((25 * data.value >> 13) + 1) >> 1;
 #else
     sw_current_data.values[i] = User_CalculateSwCurrentFactor125EMin5(data);
 #endif

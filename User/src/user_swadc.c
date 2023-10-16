@@ -50,6 +50,33 @@ typedef enum User_AdcDataBufferIndex
 
 extern SPI_HandleTypeDef hspi2;
 
+// public variables
+
+User_AdcInfo_t User_AdcInfo[USER__ADC_COUNT] = {
+  [USER__ADC_1] = {
+    .nss = {
+      .port = ADC1_NSS_GPIO_Port
+    , .pin  = ADC1_NSS_Pin
+    }
+  , .interrupt = ADC1_NRDY_EXTI_IRQn
+  , .nrdy = {
+      .port = ADC1_NRDY_GPIO_Port
+    , .pin  = ADC1_NRDY_Pin
+    }
+  }
+, [USER__ADC_2] = {
+    .nss = {
+      .port = ADC2_NSS_GPIO_Port
+    , .pin  = ADC2_NSS_Pin
+    }
+  , .interrupt = ADC2_NRDY_EXTI_IRQn
+  , .nrdy = {
+      .port = ADC2_NRDY_GPIO_Port
+    , .pin  = ADC2_NRDY_Pin
+    }
+  }
+};
+
 // private variables
 
 static User_AdcChannelCommands_t User_AdcFetchCommand = {
@@ -78,6 +105,11 @@ static bool User_AdcPollingTimeout = true;
 
 // private function prototypes
 
+__STATIC_INLINE User_Adc_t User_GetCurrentAdc(void)
+{
+  return User_AdcPollIndex < 5 ? USER__ADC_1 : USER__ADC_2;
+}
+
 static User_AdcPollStatus_t User_ContinuePollAdc(SPI_HandleTypeDef *hspi);
 static void User_FetchAdcChannel(void);
 static void User_ReadAdcChannel(void);
@@ -86,8 +118,9 @@ static void User_ReadAdcChannel(void);
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-  if (GPIO_Pin != ADC_NRDY_Pin) return;
-  HAL_NVIC_DisableIRQ(EXTI0_IRQn);
+  User_Adc_t adc = User_GetCurrentAdc();
+  if (GPIO_Pin != User_AdcInfo[adc].nrdy.pin) return;
+  HAL_NVIC_DisableIRQ(User_AdcInfo[adc].interrupt);
 
   User_ReadAdcChannel();
 }
@@ -95,7 +128,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
 {
   if (hspi != &hspi2) return;
-  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+  HAL_NVIC_EnableIRQ(User_AdcInfo[User_GetCurrentAdc()].interrupt);
 }
 
 void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
@@ -129,6 +162,28 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
 }
 
 // public functions
+
+void User_ChooseAdc(User_Adc_t adc)
+{
+  if (USER__ADC_COUNT <= adc) return;
+
+  for (unsigned i = 0; i < USER__ADC_COUNT; ++i)
+  {
+    if (adc == i) continue;
+
+    HAL_GPIO_WritePin(
+      User_AdcInfo[i].nss.port
+      , User_AdcInfo[i].nss.pin
+      , GPIO_PIN_SET
+    );
+  }
+
+  HAL_GPIO_WritePin(
+    User_AdcInfo[adc].nss.port
+    , User_AdcInfo[adc].nss.pin
+    , GPIO_PIN_RESET
+  );
+}
 
 void User_StartPollingAdc(void)
 {
@@ -166,7 +221,7 @@ void User_CheckAdcPolling(void)
 
 static User_AdcPollStatus_t User_ContinuePollAdc(SPI_HandleTypeDef *hspi)
 {
-  if (User_AdcPollIndex == USER__SW_COUNT)
+  if (User_AdcPollIndex == USER__SW_COUNT - 1)
   {
     User_AdcPollIndex = 0;
     return USER__ADC_POLL_FINISHED;
@@ -178,11 +233,14 @@ static User_AdcPollStatus_t User_ContinuePollAdc(SPI_HandleTypeDef *hspi)
 
 static void User_FetchAdcChannel(void)
 {
+  User_Adc_t adc = User_GetCurrentAdc();
+  User_ChooseAdc(adc);
+
   User_AdcFetchCommand.adc_channel = (
       User_AdcChannelCommands[User_AdcPollIndex]
   );
 
-  HAL_NVIC_ClearPendingIRQ(EXTI0_IRQn);
+  HAL_NVIC_ClearPendingIRQ(User_AdcInfo[adc].interrupt);
   HAL_SPI_Transmit_DMA(
     &hspi2
   , (uint8_t *)(&User_AdcFetchCommand)
