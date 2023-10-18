@@ -83,7 +83,7 @@ void Error_Handler(void);
 #define ADC2_NRDY_Pin GPIO_PIN_10
 #define ADC2_NRDY_GPIO_Port GPIOC
 #define ADC2_NRDY_EXTI_IRQn EXTI15_10_IRQn
-#define ADC2_NSS_Pin GPIO_PIN_4
+#define ADC2_NSS_Pin GPIO_PIN_3
 #define ADC2_NSS_GPIO_Port GPIOB
 #define PWM_SW_7_Pin GPIO_PIN_6
 #define PWM_SW_7_GPIO_Port GPIOB

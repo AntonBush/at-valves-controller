@@ -11,16 +11,17 @@
 
 // private defines
 
-#define USER__OPTIMIZED_CALCULATION
-
-#define USER__MAX_SW_FEEDBACK_VOLTAGE 0.32
+#define USER__MAX_SW_FEEDBACK_VOLTAGE 0.64
 #define USER__MAX_ADC_DATA ((1 << 24) - 1)
 #define USER__CAST_DATA_TO_VOLTAGE(data) \
 ( \
   (float)(data) * USER__MAX_SW_FEEDBACK_VOLTAGE / USER__MAX_ADC_DATA \
 )
 
-#define USER__SW_FEEDBACK_VOLTAGE_MODIFIER 5
+//#define USER__SW_FEEDBACK_VOLTAGE_MODIFIER 2.78
+//#define USER__SW_FEEDBACK_VOLTAGE_MODIFIER 2.6
+//#define USER__SW_FEEDBACK_VOLTAGE_MODIFIER 2.73
+#define USER__SW_FEEDBACK_VOLTAGE_MODIFIER 2.67
 #define USER__SW_FEEDBACK_RESISTANCE_OHM 0.25
 #define USER__CAST_FB_VOLTAGE_TO_SW_CURRENT(fb_voltage) \
 ( \
@@ -49,13 +50,9 @@ static struct User_SwCurrentBufferIndex_t {
 
 uint16_t User_CalculateSwCurrentFactor125EMin5(User_UInt24_t adc_data)
 {
-#ifdef USER__OPTIMIZED_CALCULATION
-  return (((5 * adc_data.value) >> 14) + 1) >> 1;
-#else
   float feedback_voltage = USER__CAST_DATA_TO_VOLTAGE(adc_data.value);
   float switch_current = USER__CAST_FB_VOLTAGE_TO_SW_CURRENT(feedback_voltage);
   return USER__APPLY_SW_CURRENT_FACTOR(switch_current);
-#endif
 }
 
 void User_ReadSwCurrentData(User_SwCurrentData_t *data)

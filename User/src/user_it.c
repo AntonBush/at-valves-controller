@@ -18,5 +18,5 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   if (htim != &htim6) return;
 
   User_updateData();
-  //User_CheckAdcPolling();
+  User_CheckAdcPolling();
 }

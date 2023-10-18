@@ -13,6 +13,10 @@
 
 #include "stdbool.h"
 
+// private defines
+
+#define USER__DEBUG_ADC_CHECK
+
 // private typedefs
 
 typedef struct User_AdcPullCommand {
@@ -76,6 +80,8 @@ User_AdcInfo_t User_AdcInfo[USER__ADC_COUNT] = {
     }
   }
 };
+
+uint16_t User_AdcCheckCounter = 0;
 
 // private variables
 
@@ -209,12 +215,19 @@ void User_CheckAdcPolling(void)
 {
   if (!User_AdcPollingTimeout)
   {
+#ifdef USER__DEBUG_ADC_CHECK
+    ++User_AdcCheckCounter;
+#else
     User_AdcPollIndex = 0;
     User_AdcPollStatus = USER__ADC_POLL_FINISHED;
     User_StartPollingAdc();
+#endif
     return;
   }
   User_AdcPollingTimeout = false;
+#ifdef USER__DEBUG_ADC_CHECK
+  User_AdcCheckCounter = 0;
+#endif
 }
 
 // private functions

@@ -46,7 +46,6 @@
 #define USER__ADC_MODE(mode) \
 ( \
   USER__CHOP_FLAG \
-| AD7718__MR__NEGATIVE_INPUT_BUFFERED \
 | AD7718__MR__10_CHANNELS \
 | (mode) \
 )
@@ -129,7 +128,7 @@ __STATIC_INLINE void User_WaitAdcReady(User_Adc_t adc)
     , USER__ADC_INIT_TIMEOUT
     );
 
-    if (rx.status & AD7718__SR__CALIBRATION_COMPLETED) break;
+    if (rx.status & AD7718__SR__READY) break;
   }
 */
 }
@@ -187,18 +186,24 @@ static HAL_StatusTypeDef User_InitAdcN(User_Adc_t adc)
 #endif
 
 #ifdef USER__DEBUG_CALIBRATION
-    status = User_DebugCalibration(adc);
+  status = User_DebugCalibration(adc);
   if (status != HAL_OK)
   {
     return status;
   }
 #endif
 
+  status = User_PostInitAdc();
+  if (status != HAL_OK)
+  {
+    return status;
+  }
+
 #ifdef USER__DEBUG_READ
   User_DebugRead(adc);
 #endif
 
-  return User_PostInitAdc();
+  return HAL_OK;
 }
 
 static HAL_StatusTypeDef User_ResetAdc(void)
@@ -425,6 +430,25 @@ static HAL_StatusTypeDef User_DebugRead(User_Adc_t adc)
     {
       return status;
     }
+
+    uint8_t mode_commands[] = {
+        AD7718__CR__READ | AD7718__CR_ADDR__MODE
+    };
+    User_TransmitToAdc(
+      (uint8_t *) &mode_commands
+    , sizeof(mode_commands)
+    );
+
+    uint8_t m[1];
+    User_TransmitReceiveToAdc(
+      (uint8_t *)(&m)
+    , (uint8_t *)(&m)
+    , sizeof(m)
+    );
+
+    User_FirstRead[i].m = (
+        m[0]
+    );
 
     uint8_t read_commands[] = {
       AD7718__CR__READ | AD7718__CR_ADDR__ADC_DATA

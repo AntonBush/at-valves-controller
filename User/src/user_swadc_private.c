@@ -10,7 +10,7 @@
 #include "ad7718.h"
 
 #define USER__ADC_CHANNEL(channel) \
-((channel) | AD7718__ADCCON__UNIPOLAR | AD7718__RN__0_320_V)
+((channel) | AD7718__ADCCON__UNIPOLAR | AD7718__RN__0_640_V)
 
 Ad7718_Ad7718_AdcControlChannel10_t User_AdcChannelCommands[USER__SW_COUNT] = {
   USER__ADC_CHANNEL(AD7718__CH10__FULLY_DIFFERENTIAL_0)
