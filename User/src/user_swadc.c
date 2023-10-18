@@ -217,6 +217,18 @@ void User_CheckAdcPolling(void)
   {
 #ifdef USER__DEBUG_ADC_CHECK
     ++User_AdcCheckCounter;
+
+    if (3 < User_AdcCheckCounter)
+    {
+      for (unsigned i = 0; i < USER__ADC_COUNT; ++i)
+      {
+        HAL_NVIC_DisableIRQ(User_AdcInfo[i].interrupt);
+        HAL_NVIC_ClearPendingIRQ(User_AdcInfo[i].interrupt);
+      }
+      User_AdcPollIndex = 0;
+      User_AdcPollStatus = USER__ADC_POLL_FINISHED;
+      User_StartPollingAdc();
+    }
 #else
     User_AdcPollIndex = 0;
     User_AdcPollStatus = USER__ADC_POLL_FINISHED;

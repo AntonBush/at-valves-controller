@@ -65,7 +65,7 @@ void User_CanTx(void)
 /* Больше не измеряем 10-ый ключ
   User_SetRegularParam(User_CanTxMessage.content, 16, 3, sw_current_data.values[9]);
 */
-  User_SetRegularParam(User_CanTxMessage.content, 16, 3, User_AdcCheckCounter >> 3);
+  User_SetRegularParam(User_CanTxMessage.content, 16, 3, User_AdcCheckCounter * 8);
 
   User_AddCanMessage(&User_CanTxMessage);
 }
