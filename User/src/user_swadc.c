@@ -216,9 +216,7 @@ void User_CheckAdcPolling(void)
   if (!User_AdcPollingTimeout)
   {
 #ifdef USER__DEBUG_ADC_CHECK
-    ++User_AdcCheckCounter;
-
-    if (3 < User_AdcCheckCounter)
+    if (0 < User_AdcCheckCounter)
     {
       for (unsigned i = 0; i < USER__ADC_COUNT; ++i)
       {
@@ -228,6 +226,10 @@ void User_CheckAdcPolling(void)
       User_AdcPollIndex = 0;
       User_AdcPollStatus = USER__ADC_POLL_FINISHED;
       User_StartPollingAdc();
+    }
+    else
+    {
+      ++User_AdcCheckCounter;
     }
 #else
     User_AdcPollIndex = 0;
@@ -246,7 +248,7 @@ void User_CheckAdcPolling(void)
 
 static User_AdcPollStatus_t User_ContinuePollAdc(SPI_HandleTypeDef *hspi)
 {
-  if (User_AdcPollIndex == USER__SW_COUNT - 1)
+  if (User_AdcPollIndex == USER__SW_COUNT / 2)
   {
     User_AdcPollIndex = 0;
     return USER__ADC_POLL_FINISHED;
