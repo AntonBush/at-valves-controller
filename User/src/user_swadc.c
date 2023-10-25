@@ -15,7 +15,7 @@
 
 // private defines
 
-#define USER__DEBUG_ADC_CHECK
+//#define USER__DEBUG_ADC_CHECK
 
 // private typedefs
 
@@ -59,29 +59,20 @@ extern SPI_HandleTypeDef hspi2;
 User_AdcInfo_t User_AdcInfo[USER__ADC_COUNT] = {
   [USER__ADC_1] = {
     .nss = {
-      .port = ADC1_NSS_GPIO_Port
-    , .pin  = ADC1_NSS_Pin
+      .port = ADC_NSS_GPIO_Port
+    , .pin  = ADC_NSS_Pin
     }
-  , .interrupt = ADC1_NRDY_EXTI_IRQn
+  , .interrupt = ADC_NRDY_EXTI_IRQn
   , .nrdy = {
-      .port = ADC1_NRDY_GPIO_Port
-    , .pin  = ADC1_NRDY_Pin
-    }
-  }
-, [USER__ADC_2] = {
-    .nss = {
-      .port = ADC2_NSS_GPIO_Port
-    , .pin  = ADC2_NSS_Pin
-    }
-  , .interrupt = ADC2_NRDY_EXTI_IRQn
-  , .nrdy = {
-      .port = ADC2_NRDY_GPIO_Port
-    , .pin  = ADC2_NRDY_Pin
+      .port = ADC_NRDY_GPIO_Port
+    , .pin  = ADC_NRDY_Pin
     }
   }
 };
 
+#ifdef USER__DEBUG_ADC_CHECK
 uint16_t User_AdcCheckCounter = 0;
+#endif
 
 // private variables
 
@@ -113,7 +104,7 @@ static bool User_AdcPollingTimeout = true;
 
 __STATIC_INLINE User_Adc_t User_GetCurrentAdc(void)
 {
-  return User_AdcPollIndex < 5 ? USER__ADC_1 : USER__ADC_2;
+  return USER__ADC_1;
 }
 
 static User_AdcPollStatus_t User_ContinuePollAdc(SPI_HandleTypeDef *hspi);
@@ -248,7 +239,7 @@ void User_CheckAdcPolling(void)
 
 static User_AdcPollStatus_t User_ContinuePollAdc(SPI_HandleTypeDef *hspi)
 {
-  if (User_AdcPollIndex == USER__SW_COUNT / 2)
+  if (User_AdcPollIndex == USER__SW_COUNT)
   {
     User_AdcPollIndex = 0;
     return USER__ADC_POLL_FINISHED;

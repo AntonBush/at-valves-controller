@@ -142,7 +142,7 @@ HAL_StatusTypeDef User_InitAdc(void)
     HAL_NVIC_DisableIRQ(User_AdcInfo[i].interrupt);
   }
 
-  for (unsigned i = 0; i < USER__ADC_COUNT - 1; ++i)
+  for (unsigned i = 0; i < USER__ADC_COUNT; ++i)
   {
     User_ChooseAdc(i);
     HAL_StatusTypeDef status = User_InitAdcN(i);

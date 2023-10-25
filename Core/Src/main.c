@@ -93,7 +93,6 @@ int main(void)
   MX_CAN1_Init();
   MX_SPI2_Init();
   MX_TIM3_Init();
-  MX_TIM4_Init();
   MX_TIM5_Init();
   MX_TIM6_Init();
 
@@ -168,9 +167,6 @@ static void MX_NVIC_Init(void)
   /* EXTI0_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(EXTI0_IRQn, 1, 0);
   HAL_NVIC_EnableIRQ(EXTI0_IRQn);
-  /* EXTI15_10_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 1, 0);
-  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
   /* DMA1_Channel4_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA1_Channel4_IRQn, 1, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel4_IRQn);

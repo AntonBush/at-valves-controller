@@ -21,7 +21,6 @@
 typedef enum User_Adc
 {
   USER__ADC_1
-, USER__ADC_2
 , USER__ADC_COUNT
 } User_Adc_t;
 

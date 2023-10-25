@@ -14,9 +14,12 @@
 
 typedef enum User_CurrentCanId
 {
-  USER__CURRENT_CAN_ID__SW_1_2  = 0x123FFFFF
-, USER__CURRENT_CAN_ID__SW_3_6  = 0x124FFFFF
-, USER__CURRENT_CAN_ID__SW_7_10 = 0x125FFFFF
+#ifdef USER__BOARD_1
+  USER__CURRENT_CAN_ID__SW_1_4 = 0x14
+#else
+  USER__CURRENT_CAN_ID__SW_5_8 = 0x58
+, USER__CURRENT_CAN_ID__SW_9   = 0x09
+#endif
 } User_CurrentCanId_t;
 
 static User_CanTxMessage_t User_CanTxMessage = {
@@ -32,10 +35,9 @@ static User_CanTxMessage_t User_CanTxMessage = {
 };
 
 extern uint16_t User_CanRxLifeCounter;
+//extern uint16_t User_AdcCheckCounter;
 
-extern uint16_t User_AdcCheckCounter;
-
-static uint16_t User_CanTxLifeCounter = 0;
+//static uint16_t User_CanTxLifeCounter = 0;
 
 static void User_CanTxInitMessage(uint32_t id);
 
@@ -44,30 +46,28 @@ void User_CanTx(void)
   User_SwCurrentData_t sw_current_data;
   User_ReadSwCurrentData(&sw_current_data);
 
-  User_CanTxInitMessage(USER__CURRENT_CAN_ID__SW_1_2);
+#ifdef USER__BOARD_1
+  User_CanTxInitMessage(USER__CURRENT_CAN_ID__SW_1_4);
   User_SetRegularParam(User_CanTxMessage.content, 16, 0, sw_current_data.values[0]);
   User_SetRegularParam(User_CanTxMessage.content, 16, 1, sw_current_data.values[1]);
-  User_SetRegularParam(User_CanTxMessage.content, 16, 2, User_CanTxLifeCounter++);
-  User_SetRegularParam(User_CanTxMessage.content, 16, 3, User_CanRxLifeCounter);
+  User_SetRegularParam(User_CanTxMessage.content, 16, 2, sw_current_data.values[2]);
+  User_SetRegularParam(User_CanTxMessage.content, 16, 3, sw_current_data.values[3]);
+//  User_SetRegularParam(User_CanTxMessage.content, 16, 3, User_CanRxLifeCounter * 8);
+  User_AddCanMessage(&User_CanTxMessage);
+#else
+  User_CanTxInitMessage(USER__CURRENT_CAN_ID__SW_5_8);
+  User_SetRegularParam(User_CanTxMessage.content, 16, 0, sw_current_data.values[0]);
+  User_SetRegularParam(User_CanTxMessage.content, 16, 1, sw_current_data.values[1]);
+  User_SetRegularParam(User_CanTxMessage.content, 16, 2, sw_current_data.values[2]);
+  User_SetRegularParam(User_CanTxMessage.content, 16, 3, sw_current_data.values[3]);
   User_AddCanMessage(&User_CanTxMessage);
 
-  User_CanTxInitMessage(USER__CURRENT_CAN_ID__SW_3_6);
-  User_SetRegularParam(User_CanTxMessage.content, 16, 0, sw_current_data.values[2]);
-  User_SetRegularParam(User_CanTxMessage.content, 16, 1, sw_current_data.values[3]);
-  User_SetRegularParam(User_CanTxMessage.content, 16, 2, sw_current_data.values[4]);
-  User_SetRegularParam(User_CanTxMessage.content, 16, 3, sw_current_data.values[5]);
-  User_AddCanMessage(&User_CanTxMessage);
+  User_CanTxInitMessage(USER__CURRENT_CAN_ID__SW_9);
+  User_SetRegularParam(User_CanTxMessage.content, 16, 0, sw_current_data.values[4]);
 
-  User_CanTxInitMessage(USER__CURRENT_CAN_ID__SW_7_10);
-  User_SetRegularParam(User_CanTxMessage.content, 16, 0, sw_current_data.values[6]);
-  User_SetRegularParam(User_CanTxMessage.content, 16, 1, sw_current_data.values[7]);
-  User_SetRegularParam(User_CanTxMessage.content, 16, 2, sw_current_data.values[8]);
-/* Больше не измеряем 10-ый ключ
-  User_SetRegularParam(User_CanTxMessage.content, 16, 3, sw_current_data.values[9]);
-*/
-  User_SetRegularParam(User_CanTxMessage.content, 16, 3, User_AdcCheckCounter * 8);
-
+  //User_SetRegularParam(User_CanTxMessage.content, 16, 3, User_AdcCheckCounter * 8);
   User_AddCanMessage(&User_CanTxMessage);
+#endif
 }
 
 static void User_CanTxInitMessage(uint32_t id)

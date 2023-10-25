@@ -13,9 +13,12 @@
 
 typedef enum User_PwmCanId
 {
-  USER__PWM_CAN_ID__SW_1_2  = 0x113FFFFF
-, USER__PWM_CAN_ID__SW_3_6  = 0x114FFFFF
-, USER__PWM_CAN_ID__SW_7_10 = 0x115FFFFF
+#ifdef USER__BOARD_1
+  USER__PWM_CAN_ID__SW_1_4 = 0x114
+#else
+  USER__PWM_CAN_ID__SW_5_8 = 0x158
+, USER__PWM_CAN_ID__SW_9   = 0x109
+#endif
 } User_PwmCanId_t;
 
 extern TIM_HandleTypeDef htim3;
@@ -28,30 +31,32 @@ void User_CanRx(User_CanRxMessage_t *message)
 {
   if (message->header.IDE != CAN_ID_EXT) return;
 
+  ++User_CanRxLifeCounter;
+
+  TIM_HandleTypeDef *sw_1_4_htim = &htim5;
+  TIM_HandleTypeDef *sw_5_htim = &htim3;
   switch (message->header.ExtId)
   {
-  case USER__PWM_CAN_ID__SW_1_2:
-    // T5: 1, 2
-    htim5.Instance->CCR1 = User_GetRegularParam(message->content, 16, 0);
-    htim5.Instance->CCR2 = User_GetRegularParam(message->content, 16, 1);
-    ++User_CanRxLifeCounter;
+#ifdef USER__BOARD_1
+  case USER__PWM_CAN_ID__SW_1_4:
+    // T5: 1, 3, 4
+	sw_1_4_htim->Instance->CCR1 = User_GetRegularParam(message->content, 16, 0);
+    sw_1_4_htim->Instance->CCR2 = 0;
+    sw_1_4_htim->Instance->CCR3 = User_GetRegularParam(message->content, 16, 1);
+    sw_1_4_htim->Instance->CCR4 = User_GetRegularParam(message->content, 16, 2);
+    // T3: 1
+    sw_5_htim->Instance->CCR1 = User_GetRegularParam(message->content, 16, 3);
+#else
+  case USER__PWM_CAN_ID__SW_5_8:
+    // T5: 1-4
+	sw_1_4_htim->Instance->CCR1 = User_GetRegularParam(message->content, 16, 0);
+	sw_1_4_htim->Instance->CCR2 = User_GetRegularParam(message->content, 16, 1);
+	sw_1_4_htim->Instance->CCR3 = User_GetRegularParam(message->content, 16, 2);
+    sw_1_4_htim->Instance->CCR4 = User_GetRegularParam(message->content, 16, 3);
+  case USER__PWM_CAN_ID__SW_9:
+    // T3: 1
+	sw_5_htim->Instance->CCR1 = User_GetRegularParam(message->content, 16, 0);
     break;
-  case USER__PWM_CAN_ID__SW_3_6:
-    // T5: 3, 4
-    htim5.Instance->CCR3 = User_GetRegularParam(message->content, 16, 0);
-    htim5.Instance->CCR4 = User_GetRegularParam(message->content, 16, 1);
-    // T3: 1, 2
-    htim3.Instance->CCR1 = User_GetRegularParam(message->content, 16, 2);
-    htim3.Instance->CCR2 = User_GetRegularParam(message->content, 16, 3);
-    break;
-  case USER__PWM_CAN_ID__SW_7_10:
-    // T4: 1-3
-    htim4.Instance->CCR1 = User_GetRegularParam(message->content, 16, 0);
-    htim4.Instance->CCR2 = User_GetRegularParam(message->content, 16, 1);
-    htim4.Instance->CCR3 = User_GetRegularParam(message->content, 16, 2);
-/* Больше не измеряем 10-ый ключ
-    htim4.Instance->CCR4 = User_GetRegularParam(message->content, 16, 3);
-*/
-    break;
+#endif
   }
 }

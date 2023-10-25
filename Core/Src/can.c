@@ -21,7 +21,8 @@
 #include "can.h"
 
 /* USER CODE BEGIN 0 */
-
+#define CAN_IDE (1 << 2)
+#define CAN_RTR (1 << 1)
 /* USER CODE END 0 */
 
 CAN_HandleTypeDef hcan1;
@@ -54,14 +55,22 @@ void MX_CAN1_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN CAN1_Init 2 */
+#ifdef USER__BOARD_1
+  const uint32_t id   = (0x0000 << 8) | 0x0114;
+  const uint32_t mask = (0xFFFF << 8) | 0xFFFF;
+#else
+  const uint32_t id   = (0x0000 << 8) | 0x0108;
+  const uint32_t mask = (0xFFFF << 8) | 0xFFAE;
+#endif
+
   CAN_FilterTypeDef  filter_config;
   filter_config.FilterBank = 0;
   filter_config.FilterMode = CAN_FILTERMODE_IDMASK;
   filter_config.FilterScale = CAN_FILTERSCALE_32BIT;
-  filter_config.FilterIdHigh = 0x113FFFFF >> (16 - 3);
-  filter_config.FilterIdLow = (0x113FFFFF << 3) | (1 << 2);
-  filter_config.FilterMaskIdHigh = 0xFF8F << 3;
-  filter_config.FilterMaskIdLow = 0xFFFF;
+  filter_config.FilterIdHigh = id >> (16 - 3);
+  filter_config.FilterIdLow = (id << 3) | CAN_IDE;
+  filter_config.FilterMaskIdHigh = mask >> (16 - 3);
+  filter_config.FilterMaskIdLow = mask << 3 | CAN_IDE | CAN_RTR;
   filter_config.FilterFIFOAssignment = CAN_RX_FIFO0;
   filter_config.FilterActivation = ENABLE;
   //sFilterConfig.SlaveStartFilterBank = 14;
